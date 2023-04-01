@@ -10,7 +10,10 @@
 #
 #       OPTIONS:  ---
 #
-#  REQUIREMENTS:  - git
+#  REQUIREMENTS:  - curl
+#                 - unzip
+#                 - osmium (https://osmcode.org/osmium-tool/)
+#                   - apt install osmium-tool
 #          BUGS:  ---
 #         NOTES:  ---
 #        AUTHOR:  Emerson Rocha <rocha[at]ieee.org>
@@ -79,11 +82,12 @@ data_osm_download() {
 }
 
 #######################################
-# Download IBGE dump
+# Download IBGE Brasil UF dump
 #
 # Globals:
-#   OSM_BRASIL_PBF
-#   OSM_BRASIL_URL
+#   IBGE_BASE_URL
+#   IBGE_UF_ID
+#   TEMPDIR
 # Arguments:
 #
 # Outputs:
@@ -94,13 +98,28 @@ data_ibge_download() {
 
   if [ ! -f "${TEMPDIR}/${IBGE_UF_ID}.zip" ]; then
     set -x
-    curl -o "${TEMPDIR}/${IBGE_UF_ID}.zip" "${OSM_BRASIL_URL}"
+    curl -o "${TEMPDIR}/${IBGE_UF_ID}.zip" "${IBGE_BASE_URL}${IBGE_UF_ID}.zip"
+    unzip "${TEMPDIR}/${IBGE_UF_ID}.zip" -d "${IBGE_DIR_SHAPEFILES}"
     set +x
   fi
+
+  if [ ! -f "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" ]; then
+    set -x
+    curl -o "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" "${IBGE_BASE_URL}${IBGE_MUNICIPIO_ID}.zip"
+    unzip "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" -d "${IBGE_DIR_SHAPEFILES}"
+    set +x
+  fi
+
   printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
 }
 
+# @see https://gis.stackexchange.com/questions/323148/extracting-admin-boundary-data-from-openstreetmap
+# @see https://www.openstreetmap.org/user/SomeoneElse/diary/47007
+# @see https://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative
+# osmium tags-filter data/osm/brasil.osm.pbf r/admin_level=4 -o data/tmp/brasil-uf.osm.pbf
+# osmium tags-filter data/osm/brasil.osm.pbf r/admin_level=8 -o data/tmp/brasil-municipios.osm.pbf
 
 #### main ______________________________________________________________________
 
 data_osm_download
+data_ibge_download
