@@ -19,9 +19,14 @@ jobs:
     # runs-on: ubuntu-20.04
     continue-on-error: true
     steps:
-      #### actions/checkout ____________________________________________________
       # @see https://github.com/actions/checkout
       - uses: actions/checkout@v3
+
+      # @see https://github.com/actions/setup-python
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' 
+          cache: 'pip'
 
       #### cache heavy files ___________________________________________________
       # @see https://docs.github.com/en/enterprise-server@3.5/actions/using-workflows/caching-dependencies-to-speed-up-workflows
@@ -84,13 +89,14 @@ jobs:
         continue-on-error: true
 
       #### main ________________________________________________________________
+      - run: pip install -r requirements.txt
       ## cache tests
       - if: ${{ steps.cache-ibge.outputs.cache-hit != 'true' }}
         name: cache-ibge A
         continue-on-error: true
         run: tree
 
-      - if: ${{ steps.cache-ibge.outputs.cache-hit != 'true' }}
+      - if: ${{ steps.cache-ibge.outputs.cache-hit == 'true' }}
         name: cache-ibge B
         continue-on-error: true
         run: tree

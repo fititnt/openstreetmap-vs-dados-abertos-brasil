@@ -11,7 +11,8 @@
 #       OPTIONS:  ---
 #
 #  REQUIREMENTS:  - python3
-#                   - pip install frictionless[excel]
+#                   - pip install geopandas
+#                   - pip install pyrosm
 #          BUGS:  ---
 #         NOTES:  ---
 #       AUTHORS:  Emerson Rocha <rocha[at]ieee.org>
@@ -77,7 +78,9 @@ Create the datapackage.json (requires other tool) . . . . . . . . . . . . . . .
 
 STDIN = sys.stdin.buffer
 
-#!/usr/bin/env python3
+
+import os
+os.environ['USE_PYGEOS'] = '0'
 import geopandas
 
 # curl -o data/tmp/BR_UF_2022.zip https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Brasil/BR/BR_UF_2022.zip
@@ -85,21 +88,39 @@ import geopandas
 # ogr2ogr -f GPKG data/tmp/BR_UF_2022.gpkg data/cache/ibge/BR_UF_2022.shp -nln BR_UF_2022
 gdf_ibge = geopandas.read_file("data/tmp/BR_UF_2022.gpkg")
 
-# @see https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
-# osmium tags-filter data/osm/brasil.osm.pbf r/admin_level=4 -o data/tmp/brasil-uf.osm.pbf
-gdf_osm = geopandas.read_file("data/tmp/brasil-uf.gpkg")
-
 print(">> resumo IBGE")
 print(gdf_ibge)
 
-print("\n\n>> resumo OSM")
-print(gdf_osm)
+# gdf_osm = geopandas.read_file("data/tmp/brasil-uf.gpkg")
+# print("\n\n>> resumo OSM")
+
+import pyrosm
+
+# from pyrosm import OSM
+# from pyrosm import get_data
 
 
 def osm_uf(path: str):
-    pass
+    # # @see https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
+    # # osmium tags-filter data/osm/brasil.osm.pbf r/admin_level=4 -o data/tmp/brasil-uf.osm.pbf
+    # gdf_osm = geopandas.read_file("data/tmp/brasil-uf.gpkg")
+    # print("\n\n>> resumo OSM")
+    # # print(gdf_osm)
+    # # for index, row in gdf_osm.iterrows(): # Looping over all points
+    # # # for item in gdf_osm:
+    # #     print(row)
+    # for item in gdf_osm.iterfeatures(): # Looping over all points
+    # # for item in gdf_osm:
+    #     print(item)
+    # pass
+    # fp = pyrosm.read_file("data/tmp/brasil-uf.osm.pbf")
+    fp = pyrosm.get_data("Brazil")
+    osm = pyrosm.OSM(fp)
+    print("\n\n>> resumo OSM")
+    print(osm)
 
 
+osm_uf("data/tmp/brasil-uf.gpkg")
 sys.exit()
 
 
