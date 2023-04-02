@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # ==============================================================================
 #
-#          FILE:  frictionless_to_excel.py
+#          FILE:  osm-x-govbrasil-divisao-administrativa.py
 #
-#         USAGE:  ./999999999/0/frictionless_to_excel.py
-#                 ./scripts/frictionless_to_excel.py --help
+#         USAGE:  ./scripts/osm-x-govbrasil-divisao-administrativa.py
+#                 ./scripts/osm-x-govbrasil-divisao-administrativa.py --help
 #
 #   DESCRIPTION:  ---
 #
@@ -21,7 +21,7 @@
 #       LICENSE:  Public Domain dedication or Zero-Clause BSD
 #                 SPDX-License-Identifier: Unlicense OR 0BSD
 #       VERSION:  v1.0.0
-#       CREATED:  2022-06-27 04:43 UTC Created; Based on
+#       CREATED:  2023-04-02 18:37 UTC Created; Based on
 #                                      frictionless_to_sqlite.py
 #      REVISION:  ---
 # ==============================================================================
@@ -31,7 +31,8 @@ import sys
 from frictionless import Package
 from openpyxl import Workbook
 
-PROGRAM = "frictionless_to_excel"
+
+PROGRAM = "osm-x-govbrasil-divisao-administrativa"
 DESCRIPTION = """
 ------------------------------------------------------------------------------
 The {0} is a simpler wrapper to export frictionless mapped data to Excel.
@@ -75,6 +76,31 @@ Create the datapackage.json (requires other tool) . . . . . . . . . . . . . . .
 """.format(__file__)
 
 STDIN = sys.stdin.buffer
+
+#!/usr/bin/env python3
+import geopandas
+
+# curl -o data/tmp/BR_UF_2022.zip https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Brasil/BR/BR_UF_2022.zip
+# unzip data/tmp/BR_UF_2022.zip -d data/cache/ibge/
+# ogr2ogr -f GPKG data/tmp/BR_UF_2022.gpkg data/cache/ibge/BR_UF_2022.shp -nln BR_UF_2022
+gdf_ibge = geopandas.read_file("data/tmp/BR_UF_2022.gpkg")
+
+# @see https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
+# osmium tags-filter data/osm/brasil.osm.pbf r/admin_level=4 -o data/tmp/brasil-uf.osm.pbf
+gdf_osm = geopandas.read_file("data/tmp/brasil-uf.gpkg")
+
+print(">> resumo IBGE")
+print(gdf_ibge)
+
+print("\n\n>> resumo OSM")
+print(gdf_osm)
+
+
+def osm_uf(path: str):
+    pass
+
+
+sys.exit()
 
 
 def frictionless_to_excel(
