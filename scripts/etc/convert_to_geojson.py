@@ -26,12 +26,10 @@ class GeoJsonWriter(o.SimpleHandler):
         print(']}')
 
     def node(self, o):
-        pass
         if o.tags:
             self.print_object(geojsonfab.create_point(o), o.tags)
 
     def way(self, o):
-        pass
         if o.tags and not o.is_closed():
             self.print_object(geojsonfab.create_linestring(o), o.tags)
 
