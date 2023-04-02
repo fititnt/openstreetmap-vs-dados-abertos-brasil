@@ -23,6 +23,43 @@ jobs:
       # @see https://github.com/actions/checkout
       - uses: actions/checkout@v3
 
+      #### cache heavy files ___________________________________________________
+      # @see https://docs.github.com/en/enterprise-server@3.5/actions/using-workflows/caching-dependencies-to-speed-up-workflows
+      - name: cache-ibge
+        id: cache-ibge
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-ibge
+        with:
+          path: data/cache/osm
+          # key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          key: cache-ibge-max7-days
+          enableCrossOsArchive: true
+
+      - name: cache-osm
+        id: cache-osm
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-osm
+        with:
+          path: data/cache/osm
+          # key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          key: cache-osm-max7-days
+          enableCrossOsArchive: true
+
+      # - name: cache-ibge
+      #   id: cache-ibge
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       data/cache/ibge
+
+      # - name: cache-osm
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       data/cache/osm
+
       #### Setup GDAL install __________________________________________________
       # NOTE: Ubuntu tends to have acceptable okay version of GDAL
       #       so let's try first use the default ones
@@ -39,8 +76,27 @@ jobs:
       - run: sudo apt install osmium-tool
         continue-on-error: true
 
-      #### main ________________________________________________________________
+      - run: sudo apt install tree
+        continue-on-error: true
 
+      #### etc ________________________________________________________________
+      - run: tree data
+        continue-on-error: true
+
+      #### main ________________________________________________________________
+      ## cache tests
+      - if: ${{ steps.cache-ibge.outputs.cache-hit != 'true' }}
+        name: cache-ibge A
+        continue-on-error: true
+        run: tree
+
+      - if: ${{ steps.cache-ibge.outputs.cache-hit != 'true' }}
+        name: cache-ibge B
+        continue-on-error: true
+        run: tree
+
+      - run: sudo apt install osmium-tool
+        continue-on-error: true
 
 ### temp
 # https://gis.stackexchange.com/questions/370736/installing-gdal-on-ubuntu-20-04-unmet-dependencies
