@@ -38,7 +38,7 @@ jobs:
       # @see https://docs.github.com/en/enterprise-server@3.5/actions/using-workflows/caching-dependencies-to-speed-up-workflows
 
       - name: cache data/cache/brasil.osm.pbf
-        id: data/cache/brasil.osm.pbf
+        # id: data/cache/brasil.osm.pbf
         uses: actions/cache@v3
         env:
           cache-name: data/cache/brasil.osm.pbf
@@ -52,7 +52,7 @@ jobs:
       # curl -o data/cache/brasil.osm.pbf https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
 
       - name: cache data/cache/BR_municipio.zip
-        id: data/cache/BR_municipio.zip
+        # id: data/cache/BR_municipio.zip
         uses: actions/cache@v3
         env:
           cache-name: data/cache/BR_municipio.zip
@@ -62,7 +62,7 @@ jobs:
           enableCrossOsArchive: true
 
       - name: cache data/cache/BR_UF.zip
-        id: data/cache/BR_UF.zip
+        # id: data/cache/BR_UF.zip
         uses: actions/cache@v3
         env:
           cache-name: data/cache/BR_UF.zip

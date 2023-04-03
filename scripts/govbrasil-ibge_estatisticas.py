@@ -26,8 +26,9 @@
 #      REVISION:  ---
 # ==============================================================================
 
-# ./scripts/govbrasil-ibge_estatisticas.py data/tmp/brasil-uf.osm.pbf > data/tmp/brasil-uf.osm.geojson
-# ./scripts/govbrasil-ibge_estatisticas.py data/tmp/brasil-municipios.osm.pbf > data/tmp/brasil-municipios.osm.geojson
+
+# USE_PYGEOS=0 ./scripts/govbrasil-ibge_estatisticas.py --input-ibge-shapefile='data/ibge/BR_Municipios_2022.shp' --input-ibge-nivel='municipio' > relatorio/_divisao-administrativa-municipio_ibge.hxl.csv
+# USE_PYGEOS=0 ./scripts/govbrasil-ibge_estatisticas.py --input-ibge-shapefile='data/ibge/BR_UF_2022.shp' --input-ibge-nivel='uf' > relatorio/_divisao-administrativa-uf_ibge.hxl.csv
 
 import geopandas
 import os
@@ -39,15 +40,10 @@ import csv
 # os.environ['USE_PYGEOS'] = '0'
 
 
-# from frictionless import Package
-# from openpyxl import Workbook
-
-
 PROGRAM = "govbrasil-ibge_estatisticas"
 DESCRIPTION = """
 ------------------------------------------------------------------------------
-The {0} is a simpler wrapper to export frictionless mapped data to Excel.
-After 1,048,576 rows it get even faster!
+Gera estatisticas de shapefiles típicos do IBGE
 
 ------------------------------------------------------------------------------
 """.format(__file__)
@@ -70,9 +66,6 @@ Quickstart . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
                             EXEMPLŌRUM GRATIĀ
 ------------------------------------------------------------------------------
 """.format(__file__)
-
-# USE_PYGEOS=0 ./scripts/govbrasil-ibge_estatisticas.py --input-ibge-shapefile='data/ibge/BR_Municipios_2022.shp' --input-ibge-nivel='municipio' > relatorio/_divisao-administrativa-municipio_ibge.hxl.csv
-# USE_PYGEOS=0 ./scripts/govbrasil-ibge_estatisticas.py --input-ibge-shapefile='data/ibge/BR_UF_2022.shp' --input-ibge-nivel='uf' > relatorio/_divisao-administrativa-uf_ibge.hxl.csv
 
 STDIN = sys.stdin.buffer
 
