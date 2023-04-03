@@ -62,6 +62,9 @@ Quickstart . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     USE_PYGEOS=0 {0} \
 --input-ibge-shapefile='data/ibge/BR_Municipios_2022.shp' \
 --input-ibge-nivel='municipio'
+    USE_PYGEOS=0 {0} \
+--input-ibge-shapefile='data/ibge/BR_UF_2022.shp' \
+--input-ibge-nivel='uf'
 
 ------------------------------------------------------------------------------
                             EXEMPLŌRUM GRATIĀ

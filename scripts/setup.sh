@@ -28,17 +28,20 @@ set -e
 
 ROOTDIR="$(pwd)"
 TEMPDIR="$(pwd)/data/tmp"
+CACHEDIR="$(pwd)/data/cache"
 
 OSM_BRASIL_URL="https://download.geofabrik.de/south-america/brazil-latest.osm.pbf"
-OSM_BRASIL_PBF="${ROOTDIR}/data/cache/osm/brasil.osm.pbf"
+OSM_BRASIL_PBF="${ROOTDIR}/data/cache/brasil.osm.pbf"
 
 # Exemplo: https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Brasil/BR/BR_UF_2022.zip
 # Exemplo: https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Brasil/BR/BR_Municipios_2022.zip
 IBGE_BASE_URL="https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Brasil/BR/"
 IBGE_UF_ID="BR_UF_2022"
+IBGE_UF_ID_FIXO="BR_UF"
 IBGE_MUNICIPIO_ID="BR_Municipios_2022"
+IBGE_MUNICIPIO_ID_FIXO="BR_municipio"
 
-IBGE_DIR_SHAPEFILES="${ROOTDIR}/data/cache/ibge/"
+IBGE_DIR_SHAPEFILES="${ROOTDIR}/data/cache/"
 
 # Test data, < 1MB
 # OSM_PBF_TEST_DOWNLOAD="https://download.geofabrik.de/africa/sao-tome-and-principe-latest.osm.pbf"
@@ -96,17 +99,17 @@ data_osm_download() {
 data_ibge_download() {
   printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
 
-  if [ ! -f "${TEMPDIR}/${IBGE_UF_ID}.zip" ]; then
+  if [ ! -f "${CACHEDIR}/${IBGE_UF_ID_FIXO}.zip" ]; then
     set -x
-    curl -o "${TEMPDIR}/${IBGE_UF_ID}.zip" "${IBGE_BASE_URL}${IBGE_UF_ID}.zip"
-    unzip "${TEMPDIR}/${IBGE_UF_ID}.zip" -d "${IBGE_DIR_SHAPEFILES}"
+    curl -o "${CACHEDIR}/${IBGE_UF_ID_FIXO}.zip" "${IBGE_BASE_URL}${IBGE_UF_ID}.zip"
+    unzip "${CACHEDIR}/${IBGE_UF_ID_FIXO}.zip" -d "${IBGE_DIR_SHAPEFILES}"
     set +x
   fi
 
-  if [ ! -f "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" ]; then
+  if [ ! -f "${CACHEDIR}/${IBGE_MUNICIPIO_ID_FIXO}.zip" ]; then
     set -x
-    curl -o "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" "${IBGE_BASE_URL}${IBGE_MUNICIPIO_ID}.zip"
-    unzip "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" -d "${IBGE_DIR_SHAPEFILES}"
+    curl -o "${CACHEDIR}/${IBGE_MUNICIPIO_ID_FIXO}.zip" "${IBGE_BASE_URL}${IBGE_MUNICIPIO_ID}.zip"
+    unzip "${CACHEDIR}/${IBGE_MUNICIPIO_ID_FIXO}.zip" -d "${IBGE_DIR_SHAPEFILES}"
     set +x
   fi
 
@@ -146,40 +149,40 @@ data_osm_extract_boundaries() {
 }
 
 
-#######################################
-# Extrai divisões administrativas do arquivo da OpenStreetMap
-#
-# Globals:
-#
-# Arguments:
-#
-# Outputs:
-#
-#######################################
-data_ibge_convert_geopackage() {
-  printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
+# #######################################
+# # Extrai divisões administrativas do arquivo da OpenStreetMap
+# #
+# # Globals:
+# #
+# # Arguments:
+# #
+# # Outputs:
+# #
+# #######################################
+# data_ibge_convert_geopackage() {
+#   printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
 
-  if [ ! -f "data/tmp/${IBGE_UF_ID}.gpkg" ]; then
-    set -x
-    ogr2ogr -f GPKG "data/tmp/${IBGE_UF_ID}.gpkg" "${IBGE_DIR_SHAPEFILES}${IBGE_UF_ID}.shp" -nln "${IBGE_UF_ID}"
-    set +x
-  fi
+#   if [ ! -f "data/tmp/${IBGE_UF_ID}.gpkg" ]; then
+#     set -x
+#     ogr2ogr -f GPKG "data/tmp/${IBGE_UF_ID}.gpkg" "${IBGE_DIR_SHAPEFILES}${IBGE_UF_ID}.shp" -nln "${IBGE_UF_ID}"
+#     set +x
+#   fi
 
-  if [ ! -f "data/tmp/${IBGE_MUNICIPIO_ID}.gpkg" ]; then
-    set -x
-    ogr2ogr -f GPKG "data/tmp/${IBGE_MUNICIPIO_ID}.gpkg" "${IBGE_DIR_SHAPEFILES}${IBGE_MUNICIPIO_ID}.shp" -nln "${IBGE_MUNICIPIO_ID}"
-    set +x
-  fi
+#   if [ ! -f "data/tmp/${IBGE_MUNICIPIO_ID}.gpkg" ]; then
+#     set -x
+#     ogr2ogr -f GPKG "data/tmp/${IBGE_MUNICIPIO_ID}.gpkg" "${IBGE_DIR_SHAPEFILES}${IBGE_MUNICIPIO_ID}.shp" -nln "${IBGE_MUNICIPIO_ID}"
+#     set +x
+#   fi
 
-  # if [ ! -f "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" ]; then
-  #   set -x
-  #   curl -o "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" "${IBGE_BASE_URL}${IBGE_MUNICIPIO_ID}.zip"
-  #   unzip "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" -d "${IBGE_DIR_SHAPEFILES}"
-  #   set +x
-  # fi
+#   # if [ ! -f "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" ]; then
+#   #   set -x
+#   #   curl -o "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" "${IBGE_BASE_URL}${IBGE_MUNICIPIO_ID}.zip"
+#   #   unzip "${TEMPDIR}/${IBGE_MUNICIPIO_ID}.zip" -d "${IBGE_DIR_SHAPEFILES}"
+#   #   set +x
+#   # fi
 
-  printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
-}
+#   printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
+# }
 
 
 # ogr2ogr -f GPKG data/tmp/brasil-uf.gpkg data/tmp/brasil-uf.osm.pbf
@@ -188,8 +191,8 @@ data_ibge_convert_geopackage() {
 #### main ______________________________________________________________________
 
 # init_cache_dirs
-data_osm_download
+# data_osm_download
 data_ibge_download
-data_osm_extract_boundaries
-data_ibge_convert_geopackage
+# data_osm_extract_boundaries
+# data_ibge_convert_geopackage
 
