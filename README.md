@@ -13,5 +13,19 @@
 
 
 - (acessível apenas se estiver acessando da página web em https://fititnt.github.io/openstreetmap-vs-dados-abertos-brasil/)
-  - [relatorio/temp_divisao-administrativa-municipio_ibge.hxl.csv](relatorio/temp_divisao-administrativa-municipio_ibge.hxl.csv)
-  - [relatorio/temp_divisao-administrativa-uf_ibge.hxl.csv](relatorio/temp_divisao-administrativa-uf_ibge.hxl.csv)
+  - [relatorio/temp_divisao-administrativa-municipio_ibge.csv](relatorio/temp_divisao-administrativa-municipio_ibge.csv)
+  - [relatorio/temp_divisao-administrativa-uf_ibge.csv](relatorio/temp_divisao-administrativa-uf_ibge.csv)
+
+  # Licença
+
+  ## Código
+  Domínio publico
+
+  ## Dados
+  ### OpenStreetMap
+  - https://www.openstreetmap.org/copyright
+
+  > OpenStreetMap® is open data, licensed under the Open Data Commons Open Database License (ODbL) by the OpenStreetMap Foundation (OSMF).
+
+  ## IBGE
+  > TODO: explicar aqui

@@ -27,7 +27,7 @@
 # ==============================================================================
 
 
-# USE_PYGEOS=0 ./scripts/govbrasil-ibge_estatisticas.py --input-ibge-shapefile='data/ibge/BR_Municipios_2022.shp' --input-ibge-nivel='municipio' > relatorio/_divisao-administrativa-municipio_ibge.hxl.csv
+# USE_PYGEOS=0 ./scripts/govbrasil-ibge_estatisticas.py --input-ibge-shapefile='data/ibge/BR_Municipios_2022.shp' --input-ibge-nivel='municipio' > relatorio/_divisao-administrativa-municipio_ibge.csv
 # USE_PYGEOS=0 ./scripts/govbrasil-ibge_estatisticas.py --input-ibge-shapefile='data/ibge/BR_UF_2022.shp' --input-ibge-nivel='uf' > relatorio/_divisao-administrativa-uf_ibge.hxl.csv
 
 import geopandas
@@ -143,7 +143,7 @@ def ibge_estatisticas_uf(path_shapefile: str):
 
     csvw = csv.writer(sys.stdout)
     csvw.writerow(['CD_UF', 'NM_UF', 'SIGLA_UF', 'NM_REGIAO',
-                  'AREA_KM2', '_aream2', '_centroid'])
+                  'AREA_KM2', '_inferencia-area-m2_errada', '_centroid'])
     for index, row in gdf_ibge.iterrows():
 
         _x = gdf_ibge_centroid[index].x
@@ -160,14 +160,15 @@ def ibge_estatisticas_municipio(path_shapefile: str):
 
     # https://gis.stackexchange.com/questions/48949/epsg-3857-or-4326-for-googlemaps-openstreetmap-and-leaflet
     gdf_ibge = gdf_ibge.to_crs(epsg=32723)
-    gdf_ibge_centroid = gdf_ibge.centroid.to_crs(epsg=4326)
 
     # @see https://cursos.alura.com.br/forum/topico-calculo-do-centroid-nao-funciona-129758
+    gdf_ibge_centroid = gdf_ibge.centroid.to_crs(epsg=4326)
+
     # print(gdf_ibge.area)
 
     csvw = csv.writer(sys.stdout)
     csvw.writerow(['CD_MUN', 'NM_MUN', 'SIGLA_UF',
-                  'AREA_KM2', '_aream2', '_centroid'])
+                  'AREA_KM2', '_inferencia-area-m2_errada', '_centroid'])
     for index, row in gdf_ibge.iterrows():
 
         _x = gdf_ibge_centroid[index].x

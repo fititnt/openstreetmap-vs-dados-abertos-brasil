@@ -1,3 +1,5 @@
 relatorio/*
-!relatorio/divisao-administrativa-municipio_ibge.hxl.csv
-!relatorio/divisao-administrativa-municipio_osm.hxl.csv
+!relatorio/divisao-administrativa-municipio_ibge.csv
+!relatorio/divisao-administrativa-municipio_ibge.csv
+!relatorio/debug/
+!relatorio/debug/.gitignore

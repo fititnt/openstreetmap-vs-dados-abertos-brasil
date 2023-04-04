@@ -79,8 +79,17 @@ data_osm_extract_boundaries() {
     set -x
     osmium tags-filter data/cache/brasil.osm.pbf r/admin_level=4 -o data/tmp/brasil-uf.osm.pbf
     ogr2ogr -f GPKG data/tmp/brasil-uf.gpkg data/tmp/brasil-uf.osm.pbf
+
+    # https://docs.osmcode.org/osmium/latest/osmium-export.html
+    # osmium export --output-format=geojson --geometry-types=polygon --output=data/tmp/brasil-uf.osm.geojson data/tmp/brasil-uf.osm.pbf
+    osmium export --output-format=geojsonseq --geometry-types=polygon --output=data/tmp/brasil-uf.osm.geojsonseq data/tmp/brasil-uf.osm.pbf
+    # osmium export --output-format=txt --geometry-types=polygon --output=data/tmp/brasil-uf.osm.geojson --overwrite data/tmp/brasil-uf.osm.txt
+
     osmium tags-filter data/cache/brasil.osm.pbf r/admin_level=8 -o data/tmp/brasil-municipios.osm.pbf
     ogr2ogr -f GPKG data/tmp/brasil-municipios.gpkg data/tmp/brasil-municipios.osm.pbf
+
+    osmium export --output-format=geojson --geometry-types=polygon --output=data/tmp/brasil-municipios.osm.geojson data/tmp/brasil-municipios.osm.pbf
+    # ogr2ogr -f GPKG data/tmp/brasil-municipios.gpkg data/tmp/brasil-municipios.osm.pbf
     set +x
   fi
 
@@ -108,7 +117,7 @@ relatorio_ibge_uf() {
   USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
     --input-ibge-shapefile="${IBGE_DIR_SHAPEFILES}/${IBGE_UF_ID_FIXO}.shp" \
     --input-ibge-nivel='uf' \
-    > relatorio/temp_divisao-administrativa-uf_ibge.hxl.csv
+    > relatorio/temp_divisao-administrativa-uf_ibge.csv
 
   set +x
 
@@ -135,7 +144,7 @@ relatorio_ibge_municipio() {
   USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
     --input-ibge-shapefile="${IBGE_DIR_SHAPEFILES}/${IBGE_MUNICIPIO_ID_FIXO}.shp" \
     --input-ibge-nivel='municipio' \
-    > relatorio/temp_divisao-administrativa-municipio_ibge.hxl.csv
+    > relatorio/temp_divisao-administrativa-municipio_ibge.csv
 
   set +x
 
@@ -193,7 +202,7 @@ relatorio_ibge_municipio
 # USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
 #   --input-ibge-shapefile='data/tmp/BR_Municipios_2022.shp' \
 #   --input-ibge-nivel='municipio' \
-#   > relatorio/temp_divisao-administrativa-municipio_ibge.hxl.csv
+#   > relatorio/temp_divisao-administrativa-municipio_ibge.csv
 
 # USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
 #   --input-ibge-shapefile='data/tmp/BR_UF_2022.shp' \
