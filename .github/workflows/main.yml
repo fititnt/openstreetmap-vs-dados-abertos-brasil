@@ -135,6 +135,9 @@ jobs:
       - run: bash ./scripts/setup.sh
         continue-on-error: true
 
+      - run: bash ./scripts/relatorio-admin.sh
+        continue-on-error: true
+
       - name: prova de conceito para rodar script Lua pro Fidelis
         run: lua ./scripts/etc/salve_mundi.lua
         continue-on-error: true

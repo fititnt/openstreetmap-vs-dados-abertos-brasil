@@ -126,7 +126,7 @@ data_ibge_download() {
 #### main ______________________________________________________________________
 
 # init_cache_dirs
-data_osm_download
+# data_osm_download
 data_ibge_download
 # data_osm_extract_boundaries
 # data_ibge_convert_geopackage
