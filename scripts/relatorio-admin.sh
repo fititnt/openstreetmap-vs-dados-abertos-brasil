@@ -82,13 +82,25 @@ data_osm_extract_boundaries() {
 
     # https://docs.osmcode.org/osmium/latest/osmium-export.html
     # osmium export --output-format=geojson --geometry-types=polygon --output=data/tmp/brasil-uf.osm.geojson data/tmp/brasil-uf.osm.pbf
-    osmium export --output-format=geojsonseq --geometry-types=polygon --output=data/tmp/brasil-uf.osm.geojsonseq data/tmp/brasil-uf.osm.pbf
+    osmium export \
+      --output-format=geojsonseq \
+      --geometry-types=polygon \
+      --attributes=type,id,version,timestamp \
+      --overwrite \
+      --output=data/tmp/brasil-uf.osm.geojsonseq \
+      data/tmp/brasil-uf.osm.pbf
     # osmium export --output-format=txt --geometry-types=polygon --output=data/tmp/brasil-uf.osm.geojson --overwrite data/tmp/brasil-uf.osm.txt
 
     osmium tags-filter data/cache/brasil.osm.pbf r/admin_level=8 -o data/tmp/brasil-municipios.osm.pbf
     ogr2ogr -f GPKG data/tmp/brasil-municipios.gpkg data/tmp/brasil-municipios.osm.pbf
 
-    osmium export --output-format=geojson --geometry-types=polygon --output=data/tmp/brasil-municipios.osm.geojson data/tmp/brasil-municipios.osm.pbf
+    osmium export \
+      --output-format=geojsonseq \
+      --geometry-types=polygon \
+      --attributes=type,id,version,timestamp \
+      --overwrite \
+      --output=data/tmp/brasil-municipios.osm.geojsonseq \
+      data/tmp/brasil-municipios.osm.pbf
     # ogr2ogr -f GPKG data/tmp/brasil-municipios.gpkg data/tmp/brasil-municipios.osm.pbf
     set +x
   fi
