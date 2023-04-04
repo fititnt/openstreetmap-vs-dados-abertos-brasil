@@ -18,16 +18,25 @@
   - [relatorio/temp_divisao-administrativa-municipios.f-osm.csv](relatorio/temp_divisao-administrativa-municipios.f-osm.csv)
   - [relatorio/temp_divisao-administrativa-uf.f-osm.csv](relatorio/temp_divisao-administrativa-uf.f-osm.csv)
 
-  # Licença
+<!--
 
-  ## Código
-  Domínio publico
+## Estradas
+- https://servicos.dnit.gov.br/
 
-  ## Dados
-  ### OpenStreetMap
-  - https://www.openstreetmap.org/copyright
+### Nomes de estradas
+- https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais/28971-base-de-faces-de-logradouros-do-brasil.html?=&t=downloads
+-->
 
-  > OpenStreetMap® is open data, licensed under the Open Data Commons Open Database License (ODbL) by the OpenStreetMap Foundation (OSMF).
+# Licença
 
-  ## IBGE
-  > TODO: explicar aqui
+## Código
+Domínio publico
+
+## Dados
+### OpenStreetMap
+- https://www.openstreetmap.org/copyright
+
+> OpenStreetMap® is open data, licensed under the Open Data Commons Open Database License (ODbL) by the OpenStreetMap Foundation (OSMF).
+
+## IBGE
+> TODO: explicar aqui

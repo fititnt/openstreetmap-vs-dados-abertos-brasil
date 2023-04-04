@@ -1,5 +1,3 @@
-
-
 #!/bin/bash
 #===============================================================================
 #
@@ -61,7 +59,6 @@ tty_normal=$(tput sgr0)
 # osmium tags-filter data/osm/brasil.osm.pbf r/admin_level=4 -o data/tmp/brasil-uf.osm.pbf
 # osmium tags-filter data/osm/brasil.osm.pbf r/admin_level=8 -o data/tmp/brasil-municipios.osm.pbf
 
-
 #######################################
 # Extrai divisões administrativas do arquivo da OpenStreetMap
 #
@@ -77,8 +74,13 @@ data_osm_extract_boundaries() {
 
   if [ ! -f "data/tmp/brasil-uf.osm.pbf" ]; then
     set -x
-    osmium tags-filter data/cache/brasil.osm.pbf r/admin_level=4 -o data/tmp/brasil-uf.osm.pbf
-    ogr2ogr -f GPKG data/tmp/brasil-uf.gpkg data/tmp/brasil-uf.osm.pbf
+    osmium tags-filter \
+      --output=data/tmp/brasil-uf.osm.pbf \
+      data/cache/brasil.osm.pbf \
+      r/admin_level=4
+    # --omit-referenced
+
+    # ogr2ogr -f GPKG data/tmp/brasil-uf.gpkg data/tmp/brasil-uf.osm.pbf
 
     # https://docs.osmcode.org/osmium/latest/osmium-export.html
     # osmium export --output-format=geojson --geometry-types=polygon --output=data/tmp/brasil-uf.osm.geojson data/tmp/brasil-uf.osm.pbf
@@ -90,9 +92,18 @@ data_osm_extract_boundaries() {
       --output=data/tmp/brasil-uf.osm.geojsonseq \
       data/tmp/brasil-uf.osm.pbf
     # osmium export --output-format=txt --geometry-types=polygon --output=data/tmp/brasil-uf.osm.geojson --overwrite data/tmp/brasil-uf.osm.txt
+    set +x
+  fi
 
-    osmium tags-filter data/cache/brasil.osm.pbf r/admin_level=8 -o data/tmp/brasil-municipios.osm.pbf
-    ogr2ogr -f GPKG data/tmp/brasil-municipios.gpkg data/tmp/brasil-municipios.osm.pbf
+  if [ ! -f "data/tmp/brasil-municipios.osm.pbf" ]; then
+    set -x
+    osmium tags-filter \
+      --output=data/tmp/brasil-municipios.osm.pbf \
+      data/cache/brasil.osm.pbf \
+      r/admin_level=8
+    # --omit-referenced
+
+    # ogr2ogr -f GPKG data/tmp/brasil-municipios.gpkg data/tmp/brasil-municipios.osm.pbf
 
     osmium export \
       --output-format=geojsonseq \
@@ -107,7 +118,6 @@ data_osm_extract_boundaries() {
 
   printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
 }
-
 
 #######################################
 # Gera relatório do IBGE, para UFs
@@ -129,7 +139,7 @@ relatorio_ibge_uf() {
   USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
     --input-ibge-shapefile="${IBGE_DIR_SHAPEFILES}/${IBGE_UF_ID_FIXO}.shp" \
     --input-ibge-nivel='uf' \
-    > relatorio/temp_divisao-administrativa-uf_ibge.csv
+    >relatorio/temp_divisao-administrativa-uf_ibge.csv
 
   set +x
 
@@ -156,7 +166,7 @@ relatorio_ibge_municipio() {
   USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
     --input-ibge-shapefile="${IBGE_DIR_SHAPEFILES}/${IBGE_MUNICIPIO_ID_FIXO}.shp" \
     --input-ibge-nivel='municipio' \
-    > relatorio/temp_divisao-administrativa-municipio_ibge.csv
+    >relatorio/temp_divisao-administrativa-municipio_ibge.csv
 
   set +x
 
@@ -180,7 +190,7 @@ relatorio_osm_uf() {
 
   "${ROOTDIR}/scripts/osm-geojson-estatisticas.py" \
     --input-osm-geojsonseq data/tmp/brasil-uf.osm.geojsonseq \
-    > relatorio/temp_divisao-administrativa-uf.f-osm.csv
+    >relatorio/temp_divisao-administrativa-uf.f-osm.csv
 
   set +x
 
@@ -204,7 +214,7 @@ relatorio_osm_municipio() {
 
   "${ROOTDIR}/scripts/osm-geojson-estatisticas.py" \
     --input-osm-geojsonseq data/tmp/brasil-municipios.osm.geojsonseq \
-    > relatorio/temp_divisao-administrativa-municipios.f-osm.csv
+    >relatorio/temp_divisao-administrativa-municipios.f-osm.csv
 
   set +x
 
@@ -246,9 +256,7 @@ relatorio_osm_municipio() {
 #   printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
 # }
 
-
 # ogr2ogr -f GPKG data/tmp/brasil-uf.gpkg data/tmp/brasil-uf.osm.pbf
-
 
 #### main ______________________________________________________________________
 
