@@ -30,16 +30,15 @@ ROOTDIR="$(pwd)"
 TEMPDIR="$(pwd)/data/tmp"
 CACHEDIR="$(pwd)/data/cache"
 
-OSM_BRASIL_URL=$(crudini --get configuracao.ini DEFAULT OSM_BRASIL_URL | tr -d '"')
+# OSM_BRASIL_URL=$(crudini --get configuracao.ini DEFAULT OSM_BRASIL_URL | tr -d '"')
 OSM_BRASIL_PBF=$(crudini --get configuracao.ini DEFAULT OSM_BRASIL_PBF | tr -d '"')
 
-IBGE_BASE_URL=$(crudini --get configuracao.ini DEFAULT IBGE_BASE_URL | tr -d '"')
-IBGE_UF_ID=$(crudini --get configuracao.ini DEFAULT IBGE_UF_ID | tr -d '"')
+# IBGE_UF_ID=$(crudini --get configuracao.ini DEFAULT IBGE_UF_ID | tr -d '"')
 IBGE_UF_ID_FIXO=$(crudini --get configuracao.ini DEFAULT IBGE_UF_ID_FIXO | tr -d '"')
-IBGE_MUNICIPIO_ID=$(crudini --get configuracao.ini DEFAULT IBGE_MUNICIPIO_ID | tr -d '"')
+# IBGE_MUNICIPIO_ID=$(crudini --get configuracao.ini DEFAULT IBGE_MUNICIPIO_ID | tr -d '"')
 IBGE_MUNICIPIO_ID_FIXO=$(crudini --get configuracao.ini DEFAULT IBGE_MUNICIPIO_ID_FIXO | tr -d '"')
 
-IBGE_DIR_SHAPEFILES="data/tmp/"
+IBGE_DIR_SHAPEFILES="data/tmp"
 
 #### Fancy colors constants - - - - - - - - - - - - - - - - - - - - - - - - - -
 tty_blue=$(tput setaf 4)
@@ -89,6 +88,60 @@ data_osm_extract_boundaries() {
 }
 
 
+#######################################
+# Gera relatório do IBGE, para UFs
+#
+# Globals:
+#    IBGE_DIR_SHAPEFILES
+#    IBGE_MUNICIPIO_ID_FIXO
+#    IBGE_UF_ID_FIXO
+# Arguments:
+#
+# Outputs:
+#
+#######################################
+relatorio_ibge_uf() {
+  printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
+
+  set -x
+
+  USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
+    --input-ibge-shapefile="${IBGE_DIR_SHAPEFILES}/${IBGE_UF_ID_FIXO}.shp" \
+    --input-ibge-nivel='uf' \
+    > relatorio/temp_divisao-administrativa-uf_ibge.hxl.csv
+
+  set +x
+
+  printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
+}
+
+#######################################
+# Gera relatório do IBGE, para municipios
+#
+# Globals:
+#    IBGE_DIR_SHAPEFILES
+#    IBGE_MUNICIPIO_ID_FIXO
+#    IBGE_UF_ID_FIXO
+# Arguments:
+#
+# Outputs:
+#
+#######################################
+relatorio_ibge_municipio() {
+  printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
+
+  set -x
+
+  USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
+    --input-ibge-shapefile="${IBGE_DIR_SHAPEFILES}/${IBGE_MUNICIPIO_ID_FIXO}.shp" \
+    --input-ibge-nivel='municipio' \
+    > relatorio/temp_divisao-administrativa-municipio_ibge.hxl.csv
+
+  set +x
+
+  printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
+}
+
 # #######################################
 # # Extrai divisões administrativas do arquivo da OpenStreetMap
 # #
@@ -132,17 +185,19 @@ data_osm_extract_boundaries() {
 
 data_osm_extract_boundaries
 # data_ibge_convert_geopackage
+relatorio_ibge_uf
+relatorio_ibge_municipio
 
-set -x
+# set -x
 
-USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
-  --input-ibge-shapefile='data/tmp/BR_Municipios_2022.shp' \
-  --input-ibge-nivel='municipio' \
-  > relatorio/temp_divisao-administrativa-municipio_ibge.hxl.csv
+# USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
+#   --input-ibge-shapefile='data/tmp/BR_Municipios_2022.shp' \
+#   --input-ibge-nivel='municipio' \
+#   > relatorio/temp_divisao-administrativa-municipio_ibge.hxl.csv
 
-USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
-  --input-ibge-shapefile='data/tmp/BR_UF_2022.shp' \
-  --input-ibge-nivel='uf' \
-  > relatorio/temp_divisao-administrativa-uf_ibge.hxl.csv
+# USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \
+#   --input-ibge-shapefile='data/tmp/BR_UF_2022.shp' \
+#   --input-ibge-nivel='uf' \
+#   > relatorio/temp_divisao-administrativa-uf_ibge.hxl.csv
 
-set +x
+# set +x
