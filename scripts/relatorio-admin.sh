@@ -163,6 +163,54 @@ relatorio_ibge_municipio() {
   printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
 }
 
+#######################################
+# Gera relatório da OpenStreetMap, para UF
+#
+# Globals:
+#    ROOTDIR
+# Arguments:
+#
+# Outputs:
+#
+#######################################
+relatorio_osm_uf() {
+  printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
+
+  set -x
+
+  "${ROOTDIR}/scripts/osm-geojson-estatisticas.py" \
+    --input-osm-geojsonseq data/tmp/brasil-uf.osm.geojsonseq \
+    > relatorio/temp_divisao-administrativa-uf.f-osm.csv
+
+  set +x
+
+  printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
+}
+
+#######################################
+# Gera relatório da OpenStreetMap, para UF
+#
+# Globals:
+#    ROOTDIR
+# Arguments:
+#
+# Outputs:
+#
+#######################################
+relatorio_osm_municipio() {
+  printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
+
+  set -x
+
+  "${ROOTDIR}/scripts/osm-geojson-estatisticas.py" \
+    --input-osm-geojsonseq data/tmp/brasil-municipios.osm.geojsonseq \
+    > relatorio/temp_divisao-administrativa-municipios.f-osm.csv
+
+  set +x
+
+  printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
+}
+
 # #######################################
 # # Extrai divisões administrativas do arquivo da OpenStreetMap
 # #
@@ -208,6 +256,8 @@ data_osm_extract_boundaries
 # data_ibge_convert_geopackage
 relatorio_ibge_uf
 relatorio_ibge_municipio
+relatorio_osm_uf
+relatorio_osm_municipio
 
 # set -x
 

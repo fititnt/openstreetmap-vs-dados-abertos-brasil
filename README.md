@@ -15,6 +15,8 @@
 - (acessível apenas se estiver acessando da página web em https://fititnt.github.io/openstreetmap-vs-dados-abertos-brasil/)
   - [relatorio/temp_divisao-administrativa-municipio_ibge.csv](relatorio/temp_divisao-administrativa-municipio_ibge.csv)
   - [relatorio/temp_divisao-administrativa-uf_ibge.csv](relatorio/temp_divisao-administrativa-uf_ibge.csv)
+  - [relatorio/temp_divisao-administrativa-municipios.f-osm.csv](relatorio/temp_divisao-administrativa-municipios.f-osm.csv)
+  - [relatorio/temp_divisao-administrativa-uf.f-osm.csv](relatorio/temp_divisao-administrativa-uf.f-osm.csv)
 
   # Licença
 

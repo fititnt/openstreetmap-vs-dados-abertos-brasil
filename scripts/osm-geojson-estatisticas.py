@@ -30,7 +30,9 @@
 # USE_PYGEOS=0 ./scripts/osm-geojson-estatisticas.py --input-ibge-shapefile='data/ibge/BR_Municipios_2022.shp' --input-ibge-nivel='municipio' > relatorio/_divisao-administrativa-municipio_ibge.csv
 # USE_PYGEOS=0 ./scripts/osm-geojson-estatisticas.py --input-ibge-shapefile='data/ibge/BR_UF_2022.shp' --input-ibge-nivel='uf' > relatorio/_divisao-administrativa-uf_ibge.hxl.csv
 
-import geopandas
+# import geopandas
+import datetime
+import json
 import os
 import sys
 import argparse
@@ -122,66 +124,76 @@ class Cli:
             self, pyargs, stdin=STDIN, stdout=sys.stdout,
             stderr=sys.stderr
     ):
-        # frictionless_to_excel(pyargs.datapackage, pyargs.excel)
 
-        if pyargs.ibge_nivel == 'municipio':
-            ibge_estatisticas_municipio(pyargs.ibge_shp)
-        elif pyargs.ibge_nivel == 'uf':
-            ibge_estatisticas_uf(pyargs.ibge_shp)
-        else:
-            raise SyntaxError
-
-        # print('unknow option.')
+        osm_estatisticas(pyargs.in_geojsonseq)
         return self.EXIT_OK
 
 
-def ibge_estatisticas_uf(path_shapefile: str):
-    gdf_ibge = geopandas.read_file(path_shapefile)
+def osm_estatisticas(path):
 
-    # print(">> resumo IBGE")
-    # print(gdf_ibge)
+    attrs = {
 
-    # https://gis.stackexchange.com/questions/48949/epsg-3857-or-4326-for-googlemaps-openstreetmap-and-leaflet
-    gdf_ibge = gdf_ibge.to_crs(epsg=32723)
-    gdf_ibge_centroid = gdf_ibge.centroid.to_crs(epsg=4326)
+    }
 
-    # @see https://cursos.alura.com.br/forum/topico-calculo-do-centroid-nao-funciona-129758
-    # print(gdf_ibge.area)
+    # primeira leitura: frequencia em que termos aparecem
+    with open(path, "r") as fileobject:
+        for linha in fileobject:
+            # print("")
+            # print(line)
+            if linha:
+                # 1e = record separator
+                item = json.loads(linha.lstrip("\x1e"))
 
-    csvw = csv.writer(sys.stdout)
-    csvw.writerow(['CD_UF', 'NM_UF', 'SIGLA_UF', 'NM_REGIAO',
-                  'AREA_KM2', '_inferencia-area-m2_errada', '_centroid'])
-    for index, row in gdf_ibge.iterrows():
+                if 'properties' not in item:
+                    # Likeky error?
+                    continue
 
-        _x = gdf_ibge_centroid[index].x
-        _y = gdf_ibge_centroid[index].y
-        csvw.writerow([row['CD_UF'], row['NM_UF'], row['SIGLA_UF'], row['NM_REGIAO'],
-                       row['AREA_KM2'], row['geometry'].area, f"POINT({_x} {_y})"])
+                for key, _val in item['properties'].items():
+                    if key not in attrs:
+                        attrs[key] = 0
+                    attrs[key] += 1
 
+                # print(json.dumps(item, indent=2))
+                # do_something_with(linha)
 
-def ibge_estatisticas_municipio(path_shapefile: str):
-    gdf_ibge = geopandas.read_file(path_shapefile)
+    attrs_sorted = sorted(attrs.items(), key=lambda x: x[1], reverse=True)
 
-    # print(">> resumo IBGE")
-    # print(gdf_ibge)
-
-    # https://gis.stackexchange.com/questions/48949/epsg-3857-or-4326-for-googlemaps-openstreetmap-and-leaflet
-    gdf_ibge = gdf_ibge.to_crs(epsg=32723)
-
-    # @see https://cursos.alura.com.br/forum/topico-calculo-do-centroid-nao-funciona-129758
-    gdf_ibge_centroid = gdf_ibge.centroid.to_crs(epsg=4326)
-
-    # print(gdf_ibge.area)
+    # print(attrs)
+    # print(attrs_sorted)
+    cabecalho = []
+    for _key, _count in attrs_sorted:
+        cabecalho.append(_key)
 
     csvw = csv.writer(sys.stdout)
-    csvw.writerow(['CD_MUN', 'NM_MUN', 'SIGLA_UF',
-                  'AREA_KM2', '_inferencia-area-m2_errada', '_centroid'])
-    for index, row in gdf_ibge.iterrows():
 
-        _x = gdf_ibge_centroid[index].x
-        _y = gdf_ibge_centroid[index].y
-        csvw.writerow([row['CD_MUN'], row['NM_MUN'], row['SIGLA_UF'],
-                       row['AREA_KM2'], row['geometry'].area, f"POINT({_x} {_y})"])
+    csvw.writerow(cabecalho)
+
+    # segunda leitura, agora imprime os valores de fato
+    with open(path, "r") as fileobject:
+        for linha in fileobject:
+            # print("")
+            # print(line)
+            if linha:
+                # 1e = record separator
+                item = json.loads(linha.lstrip("\x1e"))
+
+                if 'properties' not in item:
+                    # Likeky error?
+                    continue
+
+                linha_padrao = []
+                for key in cabecalho:
+                    if key in item['properties']:
+                        _val = item['properties'][key]
+
+                        if key == '@timestamp':
+                            _val = datetime.datetime.fromtimestamp(_val)
+
+                        linha_padrao.append(_val)
+                    else:
+                        linha_padrao.append('')
+
+                csvw.writerow(linha_padrao)
 
 
 if __name__ == "__main__":
