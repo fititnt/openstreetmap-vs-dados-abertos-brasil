@@ -189,6 +189,8 @@ relatorio_osm_uf() {
   set -x
 
   "${ROOTDIR}/scripts/osm-geojson-estatisticas.py" \
+    --filtro-tag='boundary=administrative' \
+    --filtro-tag='admin_level=4' \
     --input-osm-geojsonseq data/tmp/brasil-uf.osm.geojsonseq \
     >relatorio/temp_divisao-administrativa-uf.f-osm.csv
 
@@ -213,6 +215,8 @@ relatorio_osm_municipio() {
   set -x
 
   "${ROOTDIR}/scripts/osm-geojson-estatisticas.py" \
+    --filtro-tag='boundary=administrative' \
+    --filtro-tag='admin_level=8' \
     --input-osm-geojsonseq data/tmp/brasil-municipios.osm.geojsonseq \
     >relatorio/temp_divisao-administrativa-municipios.f-osm.csv
 

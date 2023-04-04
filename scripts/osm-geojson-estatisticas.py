@@ -109,6 +109,14 @@ class Cli:
             nargs='?'
         )
 
+        parser.add_argument(
+            '--filtro-tag-contem',
+            help='Filtro de tags. Exemplo: boundary=administrative',
+            dest='filtro_tag_contem',
+            nargs='?',
+            action='append'
+        )
+
         # parser.add_argument(
         #     '--input-ibge-nivel',
         #     help='Caminho para o shapefile do IBGE',
@@ -125,11 +133,27 @@ class Cli:
             stderr=sys.stderr
     ):
 
-        osm_estatisticas(pyargs.in_geojsonseq)
+        filtro_tag_contem = {}
+        filtro_tag_exceto = {}  # TODO
+        if pyargs.filtro_tag_contem:
+            for item in pyargs.filtro_tag_contem:
+                if item:
+                    if item.find('='):
+                        _key, _val = item.split('=')
+                        filtro_tag_contem[_key] = _val
+                    else:
+                        filtro_tag_contem[_key] = True
+
+        # print(pyargs.filtro_tag_contem)
+        # print(filtro_tag_contem)
+        # return self.EXIT_ERROR
+
+        osm_estatisticas(pyargs.in_geojsonseq,
+                         filtro_tag_contem, filtro_tag_exceto)
         return self.EXIT_OK
 
 
-def osm_estatisticas(path):
+def osm_estatisticas(path, filtro_tag_contem, filtro_tag_exceto):
 
     attrs = {
 
@@ -146,6 +170,9 @@ def osm_estatisticas(path):
 
                 if 'properties' not in item:
                     # Likeky error?
+                    continue
+
+                if not _filtro_permite(filtro_tag_contem, filtro_tag_exceto, item):
                     continue
 
                 for key, _val in item['properties'].items():
@@ -181,6 +208,9 @@ def osm_estatisticas(path):
                     # Likeky error?
                     continue
 
+                if not _filtro_permite(filtro_tag_contem, filtro_tag_exceto, item):
+                    continue
+
                 linha_padrao = []
                 for key in cabecalho:
                     if key in item['properties']:
@@ -194,6 +224,25 @@ def osm_estatisticas(path):
                         linha_padrao.append('')
 
                 csvw.writerow(linha_padrao)
+
+
+def _filtro_permite(regra_contem, _regra_exceto, item) -> bool:
+    # print(item)
+    if not regra_contem:
+        return True
+
+    if not item:
+        return False
+
+    # print(regra_contem)
+    for _key, _val in regra_contem.items():
+        if _key not in item['properties']:
+            return False
+
+        if _val is not True and _val != item['properties'][_key]:
+            return False
+
+    return True
 
 
 if __name__ == "__main__":
