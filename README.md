@@ -9,6 +9,7 @@
 - https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Leia_me.pdf
 - (por verificar, aqui tem a nível intramunicipal)
   - https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais/26565-malhas-de-setores-censitarios-divisoes-intramunicipais.html
+    - https://ibge.gov.br/geociencias/organizacao-do-territorio/estrutura-territorial/15774-malhas.html?=&t=downloads
 
 
 - (acessível apenas se estiver acessando da página web em https://fititnt.github.io/openstreetmap-vs-dados-abertos-brasil/)

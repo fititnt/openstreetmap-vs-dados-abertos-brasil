@@ -19,6 +19,9 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  TERM: xterm-color
+
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -34,11 +37,16 @@ jobs:
           python-version: '3.10' 
           cache: 'pip'
 
+      #### setup-lua ___________________________________________________________
+      # @see https://github.com/xpol/setup-lua
+      # - uses: xpol/setup-lua@v1
+      - name: instala Lua (prova de conceito para o Fidelis)
+        uses: xpol/setup-lua@v0.3
+
       #### cache heavy files ___________________________________________________
       # @see https://docs.github.com/en/enterprise-server@3.5/actions/using-workflows/caching-dependencies-to-speed-up-workflows
 
       - name: cache data/cache/brasil.osm.pbf
-        # id: data/cache/brasil.osm.pbf
         uses: actions/cache@v3
         env:
           cache-name: data/cache/brasil.osm.pbf
@@ -52,7 +60,6 @@ jobs:
       # curl -o data/cache/brasil.osm.pbf https://download.geofabrik.de/south-america/brazil-latest.osm.pbf
 
       - name: cache data/cache/BR_municipio.zip
-        # id: data/cache/BR_municipio.zip
         uses: actions/cache@v3
         env:
           cache-name: data/cache/BR_municipio.zip
@@ -109,22 +116,28 @@ jobs:
 
       #### main ________________________________________________________________
       - run: pip install -r requirements.txt
-      ## cache tests
-      - if: ${{ steps.cache-ibge.outputs.cache-hit != 'true' }}
-        name: cache-ibge A
-        continue-on-error: true
-        run: tree
 
-      - if: ${{ steps.cache-ibge.outputs.cache-hit == 'true' }}
-        name: cache-ibge B
-        continue-on-error: true
-        run: tree
+      # ## cache tests
+      # - if: ${{ steps.cache-ibge.outputs.cache-hit != 'true' }}
+      #   name: cache-ibge A
+      #   continue-on-error: true
+      #   run: tree
 
-      - run: sudo apt install osmium-tool
-        continue-on-error: true
+      # - if: ${{ steps.cache-ibge.outputs.cache-hit == 'true' }}
+      #   name: cache-ibge B
+      #   continue-on-error: true
+      #   run: tree
+
+      # - run: sudo apt install osmium-tool
+      #   continue-on-error: true
 
       #### Download external data _______________________________________________
       - run: bash ./scripts/setup.sh
+        continue-on-error: true
+
+      - name: prova de conceito para rodar script Lua pro Fidelis
+        run: lua ./scripts/etc/salve_mundi.lua
+        continue-on-error: true
 
       #### GitHub Pages, prepare ________________________________________________
       - name: Setup Pages
