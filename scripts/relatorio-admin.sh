@@ -264,6 +264,14 @@ relatorio_osm_municipio() {
 
 #### main ______________________________________________________________________
 
+# ./scripts/compare-tabelas.py \
+#   --input-osm-arquivo=relatorio/temp_divisao-administrativa-uf.f-osm.csv \
+#   --input-externa-arquivo=relatorio/temp_divisao-administrativa-uf_ibge.csv \
+#   --input-osm-id='IBGE:GEOCODIGO' \
+#   --input-externa-id='CD_UF' \
+
+# exit
+
 data_osm_extract_boundaries
 # data_ibge_convert_geopackage
 relatorio_ibge_uf

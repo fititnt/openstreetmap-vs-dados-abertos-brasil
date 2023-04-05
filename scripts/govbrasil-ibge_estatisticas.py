@@ -26,19 +26,11 @@
 #      REVISION:  ---
 # ==============================================================================
 
-
-# USE_PYGEOS=0 ./scripts/govbrasil-ibge_estatisticas.py --input-ibge-shapefile='data/ibge/BR_Municipios_2022.shp' --input-ibge-nivel='municipio' > relatorio/_divisao-administrativa-municipio_ibge.csv
-# USE_PYGEOS=0 ./scripts/govbrasil-ibge_estatisticas.py --input-ibge-shapefile='data/ibge/BR_UF_2022.shp' --input-ibge-nivel='uf' > relatorio/_divisao-administrativa-uf_ibge.hxl.csv
-
 import geopandas
 import os
 import sys
 import argparse
 import csv
-
-# Fix "UserWarning: The Shapely GEOS version ... needs come before geopandas
-# os.environ['USE_PYGEOS'] = '0'
-
 
 PROGRAM = "govbrasil-ibge_estatisticas"
 DESCRIPTION = """
