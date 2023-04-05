@@ -12,11 +12,13 @@
     - https://ibge.gov.br/geociencias/organizacao-do-territorio/estrutura-territorial/15774-malhas.html?=&t=downloads
 
 
-- (acessível apenas se estiver acessando da página web em https://fititnt.github.io/openstreetmap-vs-dados-abertos-brasil/)
+- **(acessível apenas se estiver acessando da página web em https://fititnt.github.io/openstreetmap-vs-dados-abertos-brasil/)**
   - [relatorio/temp_divisao-administrativa-municipio_ibge.csv](relatorio/temp_divisao-administrativa-municipio_ibge.csv)
   - [relatorio/temp_divisao-administrativa-uf_ibge.csv](relatorio/temp_divisao-administrativa-uf_ibge.csv)
   - [relatorio/temp_divisao-administrativa-municipios.f-osm.csv](relatorio/temp_divisao-administrativa-municipios.f-osm.csv)
   - [relatorio/temp_divisao-administrativa-uf.f-osm.csv](relatorio/temp_divisao-administrativa-uf.f-osm.csv)
+  - [relatorio/temp_divisao-administrativa-uf.osm-vs-ibge](relatorio/temp_divisao-administrativa-uf.osm-vs-ibge)
+  - [relatorio/temp_divisao-administrativa-municipios.osm-vs-ibge](relatorio/temp_divisao-administrativa-municipios.osm-vs-ibge)
 
 <!--
 

@@ -225,6 +225,42 @@ relatorio_osm_municipio() {
   printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
 }
 
+#######################################
+# Gera relatório da OpenStreetMap, para UF
+#
+# Globals:
+#    ROOTDIR
+# Arguments:
+#
+# Outputs:
+#
+#######################################
+relatorio_comparativo() {
+  printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
+
+  set -x
+
+  "${ROOTDIR}/scripts/compare-tabelas.py" \
+    --input-osm-arquivo=relatorio/temp_divisao-administrativa-uf.f-osm.csv \
+    --input-externa-arquivo=relatorio/temp_divisao-administrativa-uf_ibge.csv \
+    --input-osm-id='IBGE:GEOCODIGO' \
+    --input-externa-id='CD_UF' \
+    --relatorio-titulo='Comparativo de dados: OpenStreetMap vs IBGE - UF' \
+    >relatorio/temp_divisao-administrativa-uf.osm-vs-ibge.md
+
+  "${ROOTDIR}/scripts/compare-tabelas.py" \
+    --input-osm-arquivo=relatorio/temp_divisao-administrativa-municipios.f-osm.csv \
+    --input-externa-arquivo=relatorio/temp_divisao-administrativa-municipio_ibge.csv \
+    --input-osm-id='IBGE:GEOCODIGO' \
+    --input-externa-id='CD_MUN' \
+    --relatorio-titulo='Comparativo de dados: OpenStreetMap vs IBGE - Municipio' \
+    >relatorio/temp_divisao-administrativa-municipios.osm-vs-ibge.md
+
+  set +x
+
+  printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
+}
+
 # #######################################
 # # Extrai divisões administrativas do arquivo da OpenStreetMap
 # #
@@ -265,11 +301,12 @@ relatorio_osm_municipio() {
 #### main ______________________________________________________________________
 
 # ./scripts/compare-tabelas.py \
-#   --input-osm-arquivo=relatorio/temp_divisao-administrativa-uf.f-osm.csv \
-#   --input-externa-arquivo=relatorio/temp_divisao-administrativa-uf_ibge.csv \
+#   --input-osm-arquivo=relatorio/temp_divisao-administrativa-municipios.f-osm.csv \
+#   --input-externa-arquivo=relatorio/temp_divisao-administrativa-municipio_ibge.csv \
 #   --input-osm-id='IBGE:GEOCODIGO' \
-#   --input-externa-id='CD_UF' \
+#   --input-externa-id='CD_MUN' \
 
+# relatorio_comparativo
 # exit
 
 data_osm_extract_boundaries
@@ -279,6 +316,7 @@ relatorio_ibge_municipio
 relatorio_osm_uf
 relatorio_osm_municipio
 
+relatorio_comparativo
 # set -x
 
 # USE_PYGEOS=0 "${ROOTDIR}/scripts/govbrasil-ibge_estatisticas.py" \

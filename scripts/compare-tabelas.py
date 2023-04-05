@@ -119,6 +119,22 @@ class Cli:
         )
 
         parser.add_argument(
+            '--relatorio-titulo',
+            help='Titulo para fonte externa à OpenStreetMap que está sendo comparada',
+            dest='relatorio_titulo',
+            default=None,
+            nargs='?'
+        )
+
+        parser.add_argument(
+            '--input-externa-titulo',
+            help='Titulo para fonte externa à OpenStreetMap que está sendo comparada',
+            dest='in_externa_titulo',
+            default='Fonte Externa Sem Nome',
+            nargs='?'
+        )
+
+        parser.add_argument(
             '--filtro-tag-contem',
             help='Filtro de tags. Exemplo: boundary=administrative',
             dest='filtro_tag_contem',
@@ -147,6 +163,8 @@ class Cli:
             pyargs.in_externa,
             pyargs.in_osm_id,
             pyargs.in_externa_id,
+            pyargs.in_externa_titulo,
+            pyargs.relatorio_titulo,
         )
         print(comp.debug())
         # print('todo')
@@ -161,11 +179,19 @@ class CompareTabelas:
             in_externa: str,
             in_osm_id: str,
             in_externa_id: str,
+            in_externa_titulo: str,
+            relatorio_titulo: str = None,
     ) -> None:
 
         self.osm, self.erros_graves_osm = self._load(in_osm, in_osm_id)
         self.externa, self.erros_graves_externa = self._load(
             in_externa, in_externa_id)
+
+        self.osm_sobrando = self._nem_mencionado(self.osm, self.externa)
+        self.externa_sobrando = self._nem_mencionado(self.externa, self.osm)
+
+        self.in_externa_titulo = in_externa_titulo
+        self.relatorio_titulo = relatorio_titulo
 
     def _load(self, in_osm, in_osm_id):
 
@@ -179,19 +205,63 @@ class CompareTabelas:
             for row in reader:
                 # print(row)
                 # print(row[in_osm_id])
+
+                if not row[in_osm_id] or len(row[in_osm_id]) == 0:
+                    erros.append(f'SEM CHAVE REFERENCIA {row}')
+                    continue
+
                 if row[in_osm_id] in data:
                     erros.append(f'REPETIDO {row[in_osm_id]}')
                     continue
 
                 data[row[in_osm_id]] = row
 
-        # return "todo debug"
         return data, erros
 
+    def _nem_mencionado(self, fonte_a: dict, fonte_b: dict):
+        resultado = []
+        for key in fonte_a.keys():
+            if key not in fonte_b:
+                resultado.append(key)
+        return resultado
+
     def debug(self):
-        print('erros osm', self.erros_graves_osm)
-        print('erros externa', self.erros_graves_externa)
-        return "todo debug"
+
+        print(f'# {self.relatorio_titulo}')
+
+        print(f'')
+        print(f'> {datetime.datetime.now()}')
+        print(f'')
+
+        print('## Avisos graves')
+
+        if self.erros_graves_osm:
+            print('')
+            print('<details>')
+            print('<summary>Fonte: OpenStreetMap</summary>')
+            print(self.erros_graves_osm)
+            print('</details>')
+
+        # print(f'## Avisos graves ({self.in_externa_titulo})')
+
+        if self.erros_graves_externa:
+            print('')
+            print('<details>')
+            print(f'<summary>Fonte: {self.in_externa_titulo}</summary>')
+            print(self.erros_graves_osm)
+            print('</details>')
+
+        print('')
+        print('## Conteúdo adicional (OpenStreetMap)')
+        print(self.osm_sobrando)
+
+        print(f'')
+        print(f'## Conteúdo adicional ({self.in_externa_titulo})')
+        print(self.externa_sobrando)
+
+        # print('osm_sobrando', self.osm_sobrando)
+        # print('externa_sobrando', self.externa_sobrando)
+        return ""
 
 
 if __name__ == "__main__":
