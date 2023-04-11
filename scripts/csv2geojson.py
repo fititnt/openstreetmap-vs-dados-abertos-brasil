@@ -30,6 +30,7 @@
 # import os
 import argparse
 import csv
+import json
 import sys
 
 
@@ -63,6 +64,27 @@ STDIN . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     head data/tmp/DATASUS-tbEstabelecimento.csv | \
 {0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' -
 
+
+(With jq to format output)
+    head data/tmp/DATASUS-tbEstabelecimento.csv | \
+{0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
+--ignore-warnings - | jq
+
+
+GeoJSONSeq . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+head data/tmp/DATASUS-tbEstabelecimento.csv | \
+{0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
+--output-type=GeoJSONSeq --ignore-warnings -
+
+head data/tmp/DATASUS-tbEstabelecimento.csv | \
+{0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
+--output-type=GeoJSONSeq --ignore-warnings - \
+> data/tmp/DATASUS-tbEstabelecimento-head.geojsonl
+
+    {0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
+--output-type=GeoJSONSeq --ignore-warnings \
+data/tmp/DATASUS-tbEstabelecimento.csv \
+> data/tmp/DATASUS-tbEstabelecimento.geojsonl
 ------------------------------------------------------------------------------
                             EXEMPLŌRUM GRATIĀ
 ------------------------------------------------------------------------------
@@ -135,6 +157,28 @@ class Cli:
             nargs="?",
         )
 
+        parser.add_argument(
+            "--output-type",
+            help="(draft) Change the default output type",
+            dest="outfmt",
+            default="GeoJSON",
+            # geojsom
+            # geojsonl
+            choices=[
+                "GeoJSON",
+                "GeoJSONSeq",
+            ],
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
+            "--ignore-warnings",
+            help="Ignore some errors (such as empty latitude/longitude values)",
+            dest="ignore_warnings",
+            action="store_true",
+        )
+
         # parser.add_argument(
         #     '--excel',
         #     help='Relative path and extension to the excel file.'
@@ -153,19 +197,82 @@ class Cli:
         with open(pyargs.input, "r", encoding=pyargs.encoding) if len(
             pyargs.input
         ) > 1 else sys.stdin as csvfile:
-            reader = csv.reader(csvfile, delimiter=pyargs.delimiter)
+            reader = csv.DictReader(csvfile, delimiter=pyargs.delimiter)
+
+            if pyargs.outfmt == "GeoJSON":
+                print('{"features": [')
+
+            prepend = ""
+
             for row in reader:
-                print(row)
+                item = geojson_item(
+                    row, pyargs.lat, pyargs.lon, ignore_warnings=pyargs.ignore_warnings
+                )
+                if not item:
+                    continue
+
+                jsonstr = json.dumps(item, ensure_ascii=False)
+
+                # https://www.rfc-editor.org/rfc/rfc8142
+                if pyargs.outfmt == "GeoJSONSeq":
+                    print(f"\x1e{jsonstr}\n", sep="", end="")
+                    continue
+
+                print(f"{prepend} {jsonstr}")
+                if prepend == "":
+                    prepend = ","
+
+            if pyargs.outfmt == "GeoJSON":
+                print("]}")
 
         return self.EXIT_OK
 
 
-def geojson_item(row, lat, lon):
+def geojson_item(row, lat, lon, ignore_warnings: bool = False):
+    _lat = row[lat] if lat in row and len(row[lat].strip()) else False
+    _lon = row[lon] if lon in row and len(row[lon].strip()) else False
+
+    if not _lat or not _lon:
+        if not ignore_warnings:
+            print(f"WARNING LAT/LON NOT FOUND [{row}]", file=sys.stderr)
+
+        return False
+
+    if _lat.find(",") > -1:
+        _lat = _lat.replace(",", ".")
+
+    if _lon.find(",") > -1:
+        _lon = _lon.replace(",", ".")
+
+    _lat = float(_lat)
+    _lon = float(_lon)
+
     result = {
+        "geometry": {"coordinates": [_lat, _lon], "type": "Point"},
+        "properties": {},
         "type": "Feature",
-        "geometry": "Feature",
     }
-    return "@TODO"
+
+    _ignore = [lat, lon]
+
+    result["properties"] = geojsom_item_properties(row, _ignore)
+
+    return result
+
+
+def geojsom_item_properties(row: dict, ignore: list):
+    result = {}
+
+    for key, value in row.items():
+        if key in ignore:
+            continue
+
+        if not value or len(value.strip()) == 0:
+            continue
+
+        result[key] = value
+
+    return result
 
 
 if __name__ == "__main__":
