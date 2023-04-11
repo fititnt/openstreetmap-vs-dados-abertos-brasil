@@ -12,7 +12,7 @@
 #       OPTIONS:  ---
 #
 #  REQUIREMENTS:  - python3
-#                   - pip install osmium
+#                   - pip install area (https://github.com/scisco/area)
 #          BUGS:  ---
 #         NOTES:  ---
 #       AUTHORS:  Emerson Rocha <rocha[at]ieee.org>
@@ -37,6 +37,7 @@ import os
 import sys
 import argparse
 import csv
+from area import area
 
 # Fix "UserWarning: The Shapely GEOS version ... needs come before geopandas
 # os.environ['USE_PYGEOS'] = '0'
@@ -175,6 +176,8 @@ def osm_estatisticas(path, filtro_tag_contem, filtro_tag_exceto):
                 if not _filtro_permite(filtro_tag_contem, filtro_tag_exceto, item):
                     continue
 
+                item['properties']['__aream2'] = area(item)
+
                 for key, _val in item['properties'].items():
                     if key not in attrs:
                         attrs[key] = 0
@@ -210,6 +213,8 @@ def osm_estatisticas(path, filtro_tag_contem, filtro_tag_exceto):
 
                 if not _filtro_permite(filtro_tag_contem, filtro_tag_exceto, item):
                     continue
+
+                item['properties']['__aream2'] = area(item)
 
                 linha_padrao = []
                 for key in cabecalho:

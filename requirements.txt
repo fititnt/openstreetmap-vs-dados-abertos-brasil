@@ -1,3 +1,4 @@
 osmium
 crudini
 geopandas
+area
