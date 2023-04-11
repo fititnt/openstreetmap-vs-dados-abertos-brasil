@@ -46,7 +46,9 @@ CACHEDIR="$(pwd)/data/cache"
 
 head data/tmp/DATASUS-tbEstabelecimento.csv
 
+./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' data/tmp/DATASUS-tbEstabelecimento.csv
 
+head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1'
 # https://github.com/mapbox/csv2geojson
 # https://pypi.org/project/csv2geojson/
 # pip install csv2geojson

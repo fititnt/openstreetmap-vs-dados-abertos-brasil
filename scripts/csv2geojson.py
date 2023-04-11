@@ -5,7 +5,6 @@
 #
 #         USAGE:  ./scripts/csv2geojson.py
 #                 ./scripts/csv2geojson.py --help
-#                 USE_PYGEOS=0 ./scripts/csv2geojson.py --help
 #
 #   DESCRIPTION:  ---
 #
@@ -27,114 +26,56 @@
 # ==============================================================================
 
 
+# import geopandas
+# import os
 import argparse
+import csv
 import sys
-from frictionless import Package
-from openpyxl import Workbook
 
 
-PROGRAM = "osm-x-govbrasil-divisao-administrativa"
+PROGRAM = "csv2geojson"
 DESCRIPTION = """
 ------------------------------------------------------------------------------
-The {0} is a simpler wrapper to export frictionless mapped data to Excel.
-After 1,048,576 rows it get even faster!
+CSV to GeoJSOM
 
 ------------------------------------------------------------------------------
-""".format(__file__)
+""".format(
+    __file__
+)
 
+# https://www.rfc-editor.org/rfc/rfc7946
+# The GeoJSON Format
+# https://www.rfc-editor.org/rfc/rfc8142
+# GeoJSON Text Sequences
+
+# __EPILOGUM__ = ""
 __EPILOGUM__ = """
 ------------------------------------------------------------------------------
                             EXEMPLŌRUM GRATIĀ
 ------------------------------------------------------------------------------
-Quickstart . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-    {0} --datapackage='datapackage.json' --excel='999999/0/mdciii.xlsx'
+File on disk . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-Validate file with cli . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-(Use this if export does not work for some reason)
-    frictionless validate datapackage.json
+    {0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' \
+--encoding='latin-1' data/tmp/DATASUS-tbEstabelecimento.csv
 
-Create the datapackage.json (requires other tool) . . . . . . . . . . . . . . .
-(This command may be outdated eventually)
-    ./999999999/0/1603_1.py --methodus='data-apothecae' \
---data-apothecae-ad-stdout --data-apothecae-formato='datapackage' \
---data-apothecae-ex-suffixis='no1.tm.hxl.csv' \
---data-apothecae-ex-praefixis='1603_16,!1603_1_1,!1603_1_51' \
-> ./datapackage.json
-
-(same, but now all tables under 1603. Migth run out of memory) . . . . . . . . .
-    ./999999999/0/1603_1.py --methodus='data-apothecae' \
---data-apothecae-ad-stdout --data-apothecae-formato='datapackage' \
---data-apothecae-ex-suffixis='no1.tm.hxl.csv' \
---data-apothecae-ex-praefixis='1603' \
-> ./datapackage.json
-
-(Use jq to print resources)
-    jq .resources[].name < datapackage.json
+STDIN . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+(Note the "-" at the end)
+    head data/tmp/DATASUS-tbEstabelecimento.csv | \
+{0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' -
 
 ------------------------------------------------------------------------------
                             EXEMPLŌRUM GRATIĀ
 ------------------------------------------------------------------------------
-""".format(__file__)
+""".format(
+    __file__
+)
 
 STDIN = sys.stdin.buffer
 
 
-import os
-os.environ['USE_PYGEOS'] = '0'
-import geopandas
+class Cli:
+    """Main CLI parser"""
 
-
-def frictionless_to_excel(
-        datapackage: str, excel_path: str = 'mdciii.xlsx'):
-    """frictionless_to_excel
-
-    Requires:
-        pip install frictionless[excel]
-
-    Args:
-        datapackage (str): _description_
-        sqlite_path (str, optional): _description_. Defaults to 'mdciii.sqlite'.
-    """
-    # from frictionless.plugins.excel import ExcelDialect
-    # from frictionless import Resource
-
-    supported_types = [
-        "boolean",
-        "date",
-        "datetime",
-        "integer",
-        "number",
-        "string",
-        "time",
-        "year",
-    ]
-
-    package = Package(datapackage)
-
-    # Without write_only=True, a >450 table (XLSX 18MB) would take
-    # > 1.900MB of RAM. But with write_only=True takes around in order of
-    # ~10 MB of ram
-    wb = Workbook(write_only=True)
-
-    # for resource in list(package.resource_names()):
-    for item in package.resources:
-        resource = package.get_resource(item.name)
-        # print(resource)
-        # resource.write(excel_path, dialect=ExcelDialect(sheet=item.name))
-        wb_new = wb.create_sheet(title=item.name)
-
-        with resource:
-            for row in resource.row_stream:
-                cells = []
-                if row.row_number == 1:
-                    wb_new.append(row.field_names)
-                cells = row.to_list(types=supported_types)
-                wb_new.append(cells)
-
-    wb.save(filename=excel_path)
-
-
-class CLI_2600:
     def __init__(self):
         """
         Constructs all the necessary attributes for the Cli object.
@@ -144,7 +85,7 @@ class CLI_2600:
         self.EXIT_ERROR = 1
         self.EXIT_SYNTAX = 2
 
-    def make_args(self, hxl_output=True):
+    def make_args(self):
         """make_args
 
         Args:
@@ -154,42 +95,81 @@ class CLI_2600:
             prog=PROGRAM,
             description=DESCRIPTION,
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog=__EPILOGUM__
+            epilog=__EPILOGUM__,
+        )
+
+        parser.add_argument("input", help="path to CSV file on disk. Use - for stdin")
+
+        # Near same options as https://github.com/mapbox/csv2geojson
+        parser.add_argument(
+            "--lat",
+            help="the name of the latitude column",
+            dest="lat",
+            required=True,
+            nargs="?",
         )
 
         parser.add_argument(
-            '--datapackage',
-            help='datapackage.json path. Must be at at root path, so can '
-            'reference all the tables. Defaults to datapackage.json and'
-            'current working directory',
-            dest='datapackage',
-            default='datapackage.json',
-            nargs='?'
+            "--lon",
+            help="the name of the longitude column",
+            dest="lon",
+            required=True,
+            nargs="?",
         )
 
         parser.add_argument(
-            '--excel',
-            help='Relative path and extension to the excel file.'
-            'Defaults to mdciii.xlsx on current directory',
-            dest='excel',
-            default='mdciii.xlsx',
-            nargs='?'
+            "--delimiter",
+            help="the type of delimiter",
+            dest="delimiter",
+            default=",",
+            required=False,
+            nargs="?",
         )
+
+        parser.add_argument(
+            "--encoding",
+            help="the type of delimiter",
+            dest="encoding",
+            default="utf-8",
+            required=False,
+            nargs="?",
+        )
+
+        # parser.add_argument(
+        #     '--excel',
+        #     help='Relative path and extension to the excel file.'
+        #     'Defaults to mdciii.xlsx on current directory',
+        #     dest='excel',
+        #     default='mdciii.xlsx',
+        #     nargs='?'
+        # )
+
         return parser.parse_args()
 
-    def execute_cli(
-            self, pyargs, stdin=STDIN, stdout=sys.stdout,
-            stderr=sys.stderr
-    ):
-        frictionless_to_excel(pyargs.datapackage, pyargs.excel)
+    def execute_cli(self, pyargs, stdin=STDIN, stdout=sys.stdout, stderr=sys.stderr):
+        # input_file = STDIN if pyargs.input == "-" else pyargs.input
 
-        # print('unknow option.')
+        # @TODO finish this MVP
+        with open(pyargs.input, "r", encoding=pyargs.encoding) if len(
+            pyargs.input
+        ) > 1 else sys.stdin as csvfile:
+            reader = csv.reader(csvfile, delimiter=pyargs.delimiter)
+            for row in reader:
+                print(row)
+
         return self.EXIT_OK
 
 
-if __name__ == "__main__":
+def geojson_item(row, lat, lon):
+    result = {
+        "type": "Feature",
+        "geometry": "Feature",
+    }
+    return "@TODO"
 
-    cli_2600 = CLI_2600()
+
+if __name__ == "__main__":
+    cli_2600 = Cli()
     args = cli_2600.make_args()
     # pyargs.print_help()
 
