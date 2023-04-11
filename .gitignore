@@ -3,3 +3,4 @@ relatorio/*
 !relatorio/divisao-administrativa-municipio_ibge.csv
 !relatorio/debug/
 !relatorio/debug/.gitignore
+scripts/temp
