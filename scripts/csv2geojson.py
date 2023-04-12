@@ -142,6 +142,26 @@ class Cli:
         )
 
         parser.add_argument(
+            "--contain-or",
+            help="If defined, only results that match at least one clause"
+            " will appear on output. Accept multiple values."
+            "--contain-or=tag1=value1 --contain-or=tag2=value2",
+            dest="contain_or",
+            nargs="?",
+            action="append",
+        )
+
+        parser.add_argument(
+            "--contain-and",
+            help="If defined, only results that match all clauses"
+            " will appear on output. Accept multiple values."
+            "--contain-and=tag1=value1 --contain-and=tag2=value2",
+            dest="contain_and",
+            nargs="?",
+            action="append",
+        )
+
+        parser.add_argument(
             "--delimiter",
             help="the type of delimiter",
             dest="delimiter",
@@ -186,7 +206,26 @@ class Cli:
     def execute_cli(self, pyargs, stdin=STDIN, stdout=sys.stdout, stderr=sys.stderr):
         # input_file = STDIN if pyargs.input == "-" else pyargs.input
 
-        # @TODO finish this MVP
+        _contain_or = {}
+        _contain_and = {}
+        if pyargs.contain_or:
+            for item in pyargs.contain_or:
+                if item:
+                    if item.find("="):
+                        _key, _val = item.split("=")
+                        _contain_or[_key] = _val
+                    else:
+                        _contain_or[_key] = True
+
+        if pyargs.contain_and:
+            for item in pyargs.contain_and:
+                if item:
+                    if item.find("="):
+                        _key, _val = item.split("=")
+                        _contain_and[_key] = _val
+                    else:
+                        _contain_and[_key] = True
+
         with open(pyargs.input, "r", encoding=pyargs.encoding) if len(
             pyargs.input
         ) > 1 else sys.stdin as csvfile:
@@ -199,7 +238,12 @@ class Cli:
 
             for row in reader:
                 item = geojson_item(
-                    row, pyargs.lat, pyargs.lon, ignore_warnings=pyargs.ignore_warnings
+                    row,
+                    pyargs.lat,
+                    pyargs.lon,
+                    contain_or=_contain_or,
+                    contain_and=_contain_and,
+                    ignore_warnings=pyargs.ignore_warnings,
                 )
                 if not item:
                     continue
@@ -221,9 +265,19 @@ class Cli:
         return self.EXIT_OK
 
 
-def geojson_item(row, lat, lon, ignore_warnings: bool = False):
+def geojson_item(
+    row,
+    lat,
+    lon,
+    contain_or: list = None,
+    contain_and: list = None,
+    ignore_warnings: bool = False,
+):
     _lat = row[lat] if lat in row and len(row[lat].strip()) else False
     _lon = row[lon] if lon in row and len(row[lon].strip()) else False
+
+    if not geojson_item_contain(row, contain_or=contain_or, contain_and=contain_and):
+        return False
 
     if not _lat or not _lon:
         if not ignore_warnings:
@@ -251,6 +305,41 @@ def geojson_item(row, lat, lon, ignore_warnings: bool = False):
     result["properties"] = geojsom_item_properties(row, _ignore)
 
     return result
+
+
+def geojson_item_contain(
+    item, contain_or: list = None, contain_and: list = None
+) -> bool:
+    if not item:
+        return False
+
+    if not contain_or and not contain_and:
+        return True
+
+    if contain_and:
+        _count = len(contain_and.keys())
+
+        for _key, _val in contain_and.items():
+            if _key not in item:
+                raise SyntaxError(f"key {_key} not in {item}")
+                # return False
+
+            if _val is not True and _val != item[_key]:
+                return False
+            _count -= 1
+
+        if _count > 0:
+            return False
+
+    for _key, _val in contain_or.items():
+        if _key not in item:
+            raise SyntaxError(f"key {_key} not in {item}")
+            # return False
+
+        if _val is not True and _val != item[_key]:
+            return False
+
+    return True
 
 
 def geojsom_item_properties(row: dict, ignore: list):
