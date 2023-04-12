@@ -28,7 +28,6 @@ ROOTDIR="$(pwd)"
 TEMPDIR="$(pwd)/data/tmp"
 CACHEDIR="$(pwd)/data/cache"
 
-
 # pip install osm_conflate
 # cd scripts/temp
 # conflate <profile.py> -o result.osm
@@ -39,10 +38,9 @@ CACHEDIR="$(pwd)/data/cache"
 #    999999/0/0/ftp.datasus.gov.br/cnes/BASE_DE_DADOS_CNES_202302.ZIP
 #    -> tbEstabelecimento202302.csv
 #        999999/0/0/ftp.datasus.gov.br/cnes/tbEstabelecimento202302.csv
-#    
+#
 # /workspace/git/EticaAI/lexicographi-sine-finibus/officina/999999/0/0/ftp.datasus.gov.br/cnes/tbEstabelecimento202302.csv
 # data/tmp/DATASUS-tbEstabelecimento.csv
-
 
 head data/tmp/DATASUS-tbEstabelecimento.csv
 
@@ -52,3 +50,11 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py --lat=NU_
 # https://github.com/mapbox/csv2geojson
 # https://pypi.org/project/csv2geojson/
 # pip install csv2geojson
+
+exit
+
+./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSON --ignore-warnings data/tmp/DATASUS-tbEstabelecimento.csv >data/tmp/DATASUS-tbEstabelecimento.geojson
+ogr2ogr -nlt POINT -skipfailures points.shp geojsonfile.json OGRGeoJSON
+
+ogr2ogr -nlt POINT -skipfailures points.shp geojsonfile.json OGRGeoJSON
+ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento.gpkg data/tmp/DATASUS-tbEstabelecimento.geojson

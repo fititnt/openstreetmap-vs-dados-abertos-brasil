@@ -70,21 +70,24 @@ STDIN . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 {0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
 --ignore-warnings - | jq
 
-
 GeoJSONSeq . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-head data/tmp/DATASUS-tbEstabelecimento.csv | \
+    head data/tmp/DATASUS-tbEstabelecimento.csv | \
 {0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
 --output-type=GeoJSONSeq --ignore-warnings -
 
-head data/tmp/DATASUS-tbEstabelecimento.csv | \
+    head data/tmp/DATASUS-tbEstabelecimento.csv | \
 {0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
 --output-type=GeoJSONSeq --ignore-warnings - \
 > data/tmp/DATASUS-tbEstabelecimento-head.geojsonl
 
+GeoJSONSec -> Geopackage . . . . . . . . . . . . . . . . . . . . . . . . . . .
     {0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
 --output-type=GeoJSONSeq --ignore-warnings \
 data/tmp/DATASUS-tbEstabelecimento.csv \
 > data/tmp/DATASUS-tbEstabelecimento.geojsonl
+
+    ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento.gpkg \
+data/tmp/DATASUS-tbEstabelecimento.geojsonl
 ------------------------------------------------------------------------------
                             EXEMPLŌRUM GRATIĀ
 ------------------------------------------------------------------------------
@@ -122,7 +125,6 @@ class Cli:
 
         parser.add_argument("input", help="path to CSV file on disk. Use - for stdin")
 
-        # Near same options as https://github.com/mapbox/csv2geojson
         parser.add_argument(
             "--lat",
             help="the name of the latitude column",
@@ -159,7 +161,7 @@ class Cli:
 
         parser.add_argument(
             "--output-type",
-            help="(draft) Change the default output type",
+            help="Change the default output type",
             dest="outfmt",
             default="GeoJSON",
             # geojsom
@@ -179,15 +181,6 @@ class Cli:
             action="store_true",
         )
 
-        # parser.add_argument(
-        #     '--excel',
-        #     help='Relative path and extension to the excel file.'
-        #     'Defaults to mdciii.xlsx on current directory',
-        #     dest='excel',
-        #     default='mdciii.xlsx',
-        #     nargs='?'
-        # )
-
         return parser.parse_args()
 
     def execute_cli(self, pyargs, stdin=STDIN, stdout=sys.stdout, stderr=sys.stderr):
@@ -200,7 +193,7 @@ class Cli:
             reader = csv.DictReader(csvfile, delimiter=pyargs.delimiter)
 
             if pyargs.outfmt == "GeoJSON":
-                print('{"features": [')
+                print('{"type": "FeatureCollection", "features": [')
 
             prepend = ""
 
@@ -248,7 +241,7 @@ def geojson_item(row, lat, lon, ignore_warnings: bool = False):
     _lon = float(_lon)
 
     result = {
-        "geometry": {"coordinates": [_lat, _lon], "type": "Point"},
+        "geometry": {"coordinates": [_lon, _lat], "type": "Point"},
         "properties": {},
         "type": "Feature",
     }
