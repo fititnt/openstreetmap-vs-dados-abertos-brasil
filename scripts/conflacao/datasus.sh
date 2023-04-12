@@ -8,10 +8,7 @@
 #
 #       OPTIONS:  ---
 #
-#  REQUIREMENTS:  - curl
-#                 - unzip
-#                 - osmium (https://osmcode.org/osmium-tool/)
-#                   - apt install osmium-tool
+#  REQUIREMENTS:  ---
 #          BUGS:  ---
 #         NOTES:  ---
 #        AUTHOR:  Emerson Rocha <rocha[at]ieee.org>
@@ -19,8 +16,8 @@
 #       LICENSE:  Public Domain dedication
 #                 SPDX-License-Identifier: Unlicense
 #       VERSION:  v1.1
-#       CREATED:  2023-04-01 17:59 UTC
-#      REVISION:  2023-04-01 20:02 BRT extraido de setup.sh
+#       CREATED:  2023-04-11 18:13 BRT
+#      REVISION:  ---
 #===============================================================================
 set -e
 
@@ -42,6 +39,8 @@ CACHEDIR="$(pwd)/data/cache"
 # /workspace/git/EticaAI/lexicographi-sine-finibus/officina/999999/0/0/ftp.datasus.gov.br/cnes/tbEstabelecimento202302.csv
 # data/tmp/DATASUS-tbEstabelecimento.csv
 
+exit
+
 head data/tmp/DATASUS-tbEstabelecimento.csv
 
 ./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' data/tmp/DATASUS-tbEstabelecimento.csv
@@ -51,7 +50,6 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py --lat=NU_
 # https://pypi.org/project/csv2geojson/
 # pip install csv2geojson
 
-exit
 
 ./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSON --ignore-warnings data/tmp/DATASUS-tbEstabelecimento.csv >data/tmp/DATASUS-tbEstabelecimento.geojson
 ogr2ogr -nlt POINT -skipfailures points.shp geojsonfile.json OGRGeoJSON
