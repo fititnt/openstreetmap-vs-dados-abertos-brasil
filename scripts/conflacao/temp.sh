@@ -81,6 +81,13 @@
 
 # 8424800
 
+## CNAE usado pela Receita Federal do Brasil, alguns selecionados
+# "8424800";"Segurança e ordem pública"
+# "8425600";"Defesa Civil"
+# "8610101";"Atividades de atendimento hospitalar, exceto pronto-socorro e unidades para atendimento a urgências"
+# "8610102";"Atividades de atendimento em pronto-socorro e unidades hospitalares para atendimento a urgências"
+# "8621601";"UTI móvel"
+# "8621602";"Serviços móveis de atendimento a urgências, exceto por UTI móvel"
 
 # grep 8424800 K3241.K03200Y0.D30311.ESTABELE > 8424800.csv
 

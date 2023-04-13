@@ -88,6 +88,10 @@ data/tmp/DATASUS-tbEstabelecimento.csv \
 
     ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento.gpkg \
 data/tmp/DATASUS-tbEstabelecimento.geojsonl
+
+Exemplo CNPJ . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+(https://www.gov.br/receitafederal/dados/cnpj-metadados.pdf)
+CNPJ_BASICO;CNPJ_ORDEM;CNPJ_DV;IDENTIFICADOR;MATRIZ_FILIAL;SITUAÇÃO_CADASTRAL;DATA_SITUACAO_CADASTRAL;MOTIVO_SITUACAO_CADASTRAL;NOME_DA_CIDADE_NO_EXTERIOR;PAIS;DATA_DE_INICIO_ATIVIDADE;CNAE_FISCAL_PRINCIPAL;CNAE_FISCAL_SECUNDÁRIA;TIPO_DE_LOGRADOURO;LOGRADOURO;NUMERO;COMPLEMENTO;BAIRRO;CEP;UF;MUNICIPIO;DDD_1;TELEFONE_1;DDD_2;TELEFONE_2;DDD_DO_FAX;FAX;CORREIO_ELETRONICO;SITUACAO_ESPECIAL;DATA_DA_SITUACAO_ESPECIAL
 ------------------------------------------------------------------------------
                             EXEMPLŌRUM GRATIĀ
 ------------------------------------------------------------------------------

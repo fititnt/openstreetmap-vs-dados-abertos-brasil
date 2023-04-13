@@ -46,6 +46,35 @@ tty_normal=$(tput sgr0)
 #### functions _________________________________________________________________
 
 #######################################
+# Download CNPJs de empresas via site da Receita Federal do Brasil
+#
+# Globals:
+#   CACHEDIR
+# Arguments:
+#
+# Outputs:
+#
+#######################################
+data_cnpj_empresas_download() {
+  printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
+
+  # https://dadosabertos.rfb.gov.br/CNPJ/Empresas0.zip
+
+  for i in {0..9}; do
+    if [ ! -f "${CACHEDIR}/CNPJ_Empresas${i}.zip" ]; then
+      set -x
+      curl --output "${CACHEDIR}/CNPJ_Empresas${i}.zip" \
+        "https://dadosabertos.rfb.gov.br/CNPJ/Empresas${i}.zip"
+      set +x
+    else
+      echo "Cacheado CNPJ_Empresas${i}.zip"
+    fi
+  done
+
+  printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
+}
+
+#######################################
 # Download CNPJs de estabelecimentos via site da Receita Federal do Brasil
 #
 # Globals:
@@ -96,10 +125,15 @@ data_cnpj_estabelecimentos_grep() {
   printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
 
   if [ ! -f "${outfile}" ]; then
+
+    echo '"CNPJ_BASICO";"CNPJ_ORDEM";"CNPJ_DV";"IDENTIFICADOR_MATRIZ_FILIAL";"NOME_FANTASIA";"SITUACAO_CADASTRAL";"DATA_SITUACAO_CADASTRAL";"MOTIVO_SITUACAO_CADASTRAL";"NOME_DA_CIDADE_NO_EXTERIOR";"PAIS";"DATA_DE_INICIO_ATIVIDADE";"CNAE_FISCAL_PRINCIPAL";"CNAE_FISCAL_SECUNDARIA";"TIPO_DE_LOGRADOURO";"LOGRADOURO";"NUMERO";"COMPLEMENTO";"BAIRRO";"CEP";"UF";"MUNICIPIO";"DDD_1";"TELEFONE_1";"DDD_2";"TELEFONE_2";"DDD_DO_FAX";"FAX";"CORREIO_ELETRONICO";"SITUACAO_ESPECIAL";"DATA_DA_SITUACAO_ESPECIAL"' \
+      >"${outfile}"
+
     for i in {0..9}; do
       set -x
       # echo zipgrep "${grep_args}" "${CACHEDIR}/CNPJ_Estabelecimentos${i}.zip" ">> ${outfile}"
-      zipgrep "${grep_args}" "${CACHEDIR}/CNPJ_Estabelecimentos${i}.zip" >>"${outfile}"
+      # zipgrep "${grep_args}" "${CACHEDIR}/CNPJ_Estabelecimentos${i}.zip" >>"${outfile}"
+      zipgrep "${grep_args}" "${CACHEDIR}/CNPJ_Estabelecimentos${i}.zip" | cut -d: -f2- >>"${outfile}"
       set +x
     done
   else
@@ -116,7 +150,21 @@ data_cnpj_estabelecimentos_grep() {
 #### main ______________________________________________________________________
 
 # init_cache_dirs
+data_cnpj_empresas_download
 data_cnpj_estabelecimentos_download
 data_cnpj_estabelecimentos_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04-12.csv"
+
+# "CNPJ_BASICO";"RAZAO_SOCIAL";"NATUREZA_JURIDICA";"QUALIFICACAO_DO_RESPONSAVEL";"CAPITAL_SOCIAL_DA_EMPRESA";"PORTE_DA_EMPRESA";"ENTE_FEDERATIVO_RESPONSAVEL"
+# data_cnpj_empresas_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04-12.csv"
 # data_osm_extract_boundaries
 # data_ibge_convert_geopackage
+
+# head data/tmp/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04-12.csv
+# tail data/tmp/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04-12__old.csv
+# tail data/tmp/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04-12__old.csv | sed -i 's/^*://g' input.txt
+
+# Exemplo CNPJ . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+# (https://www.gov.br/receitafederal/dados/cnpj-metadados.pdf)
+# CNPJ_BASICO;CNPJ_ORDEM;CNPJ_DV;IDENTIFICADOR;MATRIZ_FILIAL;SITUACAO_CADASTRAL;DATA_SITUACAO_CADASTRAL;MOTIVO_SITUACAO_CADASTRAL;NOME_DA_CIDADE_NO_EXTERIOR;PAIS;DATA_DE_INICIO_ATIVIDADE;CNAE_FISCAL_PRINCIPAL;CNAE_FISCAL_SECUNDÁRIA;TIPO_DE_LOGRADOURO;LOGRADOURO;NUMERO;COMPLEMENTO;BAIRRO;CEP;UF;MUNICIPIO;DDD_1;TELEFONE_1;DDD_2;TELEFONE_2;DDD_DO_FAX;FAX;CORREIO_ELETRONICO;SITUACAO_ESPECIAL;DATA_DA_SITUACAO_ESPECIAL
+
+# https://github.com/thampiman/reverse-geocoder
