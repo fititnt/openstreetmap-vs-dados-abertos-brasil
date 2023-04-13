@@ -32,7 +32,8 @@
 # - Sem contjunto de dados nacional
 #  - SC (página web) https://pc.sc.gov.br/?page_id=83
 
-
+## Logradoros
+# - https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/malha_de_setores_censitarios/censo_2010/base_de_faces_de_logradouros_versao_2021/
 
 # Defesa Civil
 # https://concla.ibge.gov.br/busca-online-cnae.html?view=subclasse&tipo=cnae&versao=10.1.0&subclasse=8425600&chave=Defesa%20Civil
