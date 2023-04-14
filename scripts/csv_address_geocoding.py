@@ -20,7 +20,7 @@
 #       COMPANY:  EticaAI
 #       LICENSE:  Public Domain dedication or Zero-Clause BSD
 #                 SPDX-License-Identifier: Unlicense OR 0BSD
-#       VERSION:  v0.1.0
+#       VERSION:  v0.12.0
 #       CREATED:  2023-04-13 22:14 BRT
 #      REVISION:  ---
 # ==============================================================================
@@ -29,7 +29,16 @@
 import argparse
 import csv
 import json
+import os
 import sys
+from typing import Union
+
+from geopy.geocoders import Nominatim
+
+__VERSION__ = "0.2.0"
+
+USER_AGENT = os.getenv("USER_AGENT", "csv_address_geocoding.py/" + __VERSION__)
+USER_AGENT_LANG = os.getenv("USER_AGENT_LANG", "pt")
 
 
 PROGRAM = "csv_address_geocoding"
@@ -54,41 +63,7 @@ __EPILOGUM__ = """
 ------------------------------------------------------------------------------
                             EXEMPLŌRUM GRATIĀ
 ------------------------------------------------------------------------------
-File on disk . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-    {0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' \
---encoding='latin-1' data/tmp/DATASUS-tbEstabelecimento.csv
-
-STDIN . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-(Note the "-" at the end)
-    head data/tmp/DATASUS-tbEstabelecimento.csv | \
-{0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' -
-
-
-(With jq to format output)
-    head data/tmp/DATASUS-tbEstabelecimento.csv | \
-{0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
---ignore-warnings - | jq
-
-GeoJSONSeq . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-    head data/tmp/DATASUS-tbEstabelecimento.csv | \
-{0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
---output-type=GeoJSONSeq --ignore-warnings -
-
-    head data/tmp/DATASUS-tbEstabelecimento.csv | \
-{0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
---output-type=GeoJSONSeq --ignore-warnings - \
-> data/tmp/DATASUS-tbEstabelecimento-head.geojsonl
-
-GeoJSONSec -> Geopackage . . . . . . . . . . . . . . . . . . . . . . . . . . .
-    {0} --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' \
---output-type=GeoJSONSeq --ignore-warnings \
-data/tmp/DATASUS-tbEstabelecimento.csv \
-> data/tmp/DATASUS-tbEstabelecimento.geojsonl
-
-    ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento.gpkg \
-data/tmp/DATASUS-tbEstabelecimento.geojsonl
-
+    {0} --mode='inline2debug' --v-postalcode=88015600 -
 
 ------------------------------------------------------------------------------
                             EXEMPLŌRUM GRATIĀ
@@ -131,7 +106,7 @@ class Cli:
             "--lat",
             help="the name of the latitude column",
             dest="lat",
-            required=True,
+            # required=True,
             nargs="?",
         )
 
@@ -139,7 +114,7 @@ class Cli:
             "--lon",
             help="the name of the longitude column",
             dest="lon",
-            required=True,
+            # required=True,
             nargs="?",
         )
 
@@ -197,6 +172,84 @@ class Cli:
         )
 
         parser.add_argument(
+            "--q",
+            help="(inline mode only) raw query",
+            dest="q",
+            default=None,
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
+            "--v-postalcode",
+            help="postalcode value",
+            dest="v_postalcode",
+            default=None,
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
+            "--v-country",
+            help="country value",
+            dest="v_country",
+            default=None,
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
+            "--v-state",
+            help="state value",
+            dest="v_state",
+            default=None,
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
+            "--v-street",
+            help="street value (equivalent: <housenumber> <streetname>)",
+            dest="v_street",
+            default=None,
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
+            "--v-housenumber",
+            help="housenumber value",
+            dest="v_housenumber",
+            default=None,
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
+            "--v-streetname",
+            help="streetname value",
+            dest="v_streetname",
+            default=None,
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
+            "--mode",
+            help="Change the operation mode",
+            dest="mode",
+            default="csv2csv",
+            # geojsom
+            # geojsonl
+            choices=[
+                "csv2csv",
+                "inline2debug",
+            ],
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
             "--ignore-warnings",
             help="Ignore some errors (such as empty latitude/longitude values)",
             dest="ignore_warnings",
@@ -227,6 +280,39 @@ class Cli:
                         _contain_and[_key] = _val
                     else:
                         _contain_and[_key] = True
+
+        if pyargs.mode == "inline2debug":
+            if pyargs.q and len(pyargs.q):
+                query_params = pyargs.q
+            else:
+                query_params = {}
+                if pyargs.v_postalcode:
+                    query_params["postalcode"] = pyargs.v_postalcode
+                if pyargs.v_country:
+                    query_params["country"] = pyargs.v_country
+                if pyargs.v_state:
+                    query_params["state"] = pyargs.v_state
+
+                if pyargs.v_street:
+                    query_params["street"] = pyargs.v_state
+
+                if pyargs.v_housenumber:
+                    query_params["housenumber"] = pyargs.v_housenumber
+
+                if pyargs.v_streetname:
+                    query_params["streetname"] = pyargs.v_streetname
+
+                # if pyargs.v_county:
+                #     query_params["county"] = pyargs.v_county
+
+            # query_params = "175 5th Avenue NYC"
+            query_params = {"postalcode": "88015600"}
+            result = geocoding_item(query_params)
+            print(json.dumps(result, ensure_ascii=False))
+            # TODO: continue
+            return self.EXIT_OK
+        else:
+            raise NotImplemented
 
         with open(pyargs.input, "r", encoding=pyargs.encoding) if len(
             pyargs.input
@@ -265,6 +351,22 @@ class Cli:
                 print("]}")
 
         return self.EXIT_OK
+
+
+def geocoding_item(query_params: Union[dict, str]):
+    # geolocator = Nominatim(user_agent="specify_your_app_name_here")
+    geolocator = Nominatim(user_agent=USER_AGENT)
+
+    # query_params = "175 5th Avenue NYC"
+
+    location = geolocator.geocode(query_params)
+
+    return location.raw
+
+    # print(location.address)
+
+    # sys.exit()
+    pass
 
 
 def geojson_item(
