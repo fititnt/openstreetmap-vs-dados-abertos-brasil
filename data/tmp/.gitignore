@@ -1,2 +1,7 @@
 *
 !.gitignore
+!logradouros/antigo/.gitkeep
+!logradouros/recente/.gitkeep
+
+!logradouros/*
+!logradouros/

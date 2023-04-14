@@ -306,7 +306,7 @@ class Cli:
                 #     query_params["county"] = pyargs.v_county
 
             # query_params = "175 5th Avenue NYC"
-            query_params = {"postalcode": "88015600"}
+            # query_params = {"postalcode": "88015600"}
             result = geocoding_item(query_params)
             print(json.dumps(result, ensure_ascii=False))
             # TODO: continue
