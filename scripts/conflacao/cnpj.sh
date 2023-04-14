@@ -75,6 +75,48 @@ data_cnpj_empresas_download() {
 }
 
 #######################################
+# Faz um grep linha por linha em todos dentro ddos zips das empresas
+#
+# Example:
+#  data_cnpj_estabelecimentos_grep 'DEFESA CIVIL' "${TEMPDIR}/outfile.csv"
+#
+# Globals:
+#   CACHEDIR
+#   TEMPDIR
+# Arguments:
+#    grep_args
+#
+# Outputs:
+#
+#######################################
+data_cnpj_empresas_grep() {
+  grep_args="${1}"
+  outfile="${2}"
+
+  printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
+
+  if [ ! -f "${outfile}" ]; then
+
+    echo '"CNPJ_BASICO";"RAZAO_SOCIAL";"NATUREZA_JURIDICA";"QUALIFICACAO_DO_RESPONSAVEL";"CAPITAL_SOCIAL_DA_EMPRESA";"PORTE_DA_EMPRESA";"ENTE_FEDERATIVO_RESPONSAVEL"' \
+      >"${outfile}"
+
+    for i in {0..9}; do
+      set -x
+      zipgrep "${grep_args}" "${CACHEDIR}/CNPJ_Empresas${i}.zip" | cut -d: -f2- >>"${outfile}"
+      set +x
+    done
+  else
+    echo "Cacheado ${outfile}. Delete se quiser re-gerar"
+  fi
+
+  _count=$(wc -l ${outfile})
+
+  printf "\t%40s\n" "${tty_green} ${_count} ${tty_normal}"
+
+  printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
+}
+
+#######################################
 # Download CNPJs de estabelecimentos via site da Receita Federal do Brasil
 #
 # Globals:
@@ -114,6 +156,8 @@ data_cnpj_estabelecimentos_download() {
 #   TEMPDIR
 # Arguments:
 #    grep_args
+#    outfile
+#    grep_args_extra
 #
 # Outputs:
 #
@@ -121,6 +165,7 @@ data_cnpj_estabelecimentos_download() {
 data_cnpj_estabelecimentos_grep() {
   grep_args="${1}"
   outfile="${2}"
+  grep_args_extra="${3-''}"
 
   printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
 
@@ -130,11 +175,16 @@ data_cnpj_estabelecimentos_grep() {
       >"${outfile}"
 
     for i in {0..9}; do
-      set -x
-      # echo zipgrep "${grep_args}" "${CACHEDIR}/CNPJ_Estabelecimentos${i}.zip" ">> ${outfile}"
-      # zipgrep "${grep_args}" "${CACHEDIR}/CNPJ_Estabelecimentos${i}.zip" >>"${outfile}"
-      zipgrep "${grep_args}" "${CACHEDIR}/CNPJ_Estabelecimentos${i}.zip" | cut -d: -f2- >>"${outfile}"
-      set +x
+
+      if [ -z "${grep_args_extra}" ]; then
+        set -x
+        zipgrep "${grep_args}" "${CACHEDIR}/CNPJ_Estabelecimentos${i}.zip" | cut -d: -f2- >>"${outfile}"
+        set +x
+      else
+        set -x
+        zipgrep "${grep_args}" "${CACHEDIR}/CNPJ_Estabelecimentos${i}.zip" | cut -d: -f2- | grep --extended-regexp "${grep_args_extra}" >>"${outfile}"
+        set +x
+      fi
     done
   else
     echo "Cacheado ${outfile}. Delete se quiser re-gerar"
@@ -153,8 +203,17 @@ data_cnpj_estabelecimentos_grep() {
 data_cnpj_empresas_download
 data_cnpj_estabelecimentos_download
 data_cnpj_estabelecimentos_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04-12.csv"
+data_cnpj_estabelecimentos_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC-defesa-civil-et-al_2023-04-12.csv" 'DEFESA CIVIL|HOSPITAL |PRONTO SOCORRO|BOMBEIROS|DELEGACIA'
 
+data_cnpj_empresas_grep 'DEFESA CIVIL' "${TEMPDIR}/ReceitaFederal_CNPJ_Empresas__BR-defesacivil_2023-04-12.csv"
+
+# Nao aceita regex extendido
+# data_cnpj_empresas_grep 'DEFESA CIVIL|HOSPITAL |PRONTO SOCORRO|BOMBEIROS|DELEGACIA' "${TEMPDIR}/ReceitaFederal_CNPJ_Empresas__defesacivil_v2_2023-04-12.csv"
+
+# @TODO data_cnpj_empresas_grep
 # "CNPJ_BASICO";"RAZAO_SOCIAL";"NATUREZA_JURIDICA";"QUALIFICACAO_DO_RESPONSAVEL";"CAPITAL_SOCIAL_DA_EMPRESA";"PORTE_DA_EMPRESA";"ENTE_FEDERATIVO_RESPONSAVEL"
+# zipgrep 'SAMU' data/cache/CNPJ_Empresas0.zip
+
 # data_cnpj_empresas_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04-12.csv"
 # data_osm_extract_boundaries
 # data_ibge_convert_geopackage
