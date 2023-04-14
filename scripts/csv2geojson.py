@@ -11,7 +11,6 @@
 #       OPTIONS:  ---
 #
 #  REQUIREMENTS:  - python3
-#                   - pip install osmium
 #          BUGS:  ---
 #         NOTES:  ---
 #       AUTHORS:  Emerson Rocha <rocha[at]ieee.org>
@@ -205,6 +204,30 @@ class Cli:
             action="store_true",
         )
 
+        cast_group = parser.add_argument_group("Convert/preprocess data from input")
+
+        cast_group.add_argument(
+            "--cast-integer",
+            help="Name of input fields to cast to integer. "
+            "Use | for multiple. "
+            "Example: field_a|field_b|field_c",
+            dest="cast_integer",
+            nargs="?",
+            type=lambda x: x.split("|"),
+            default=None,
+        )
+
+        cast_group.add_argument(
+            "--cast-float",
+            help="(DRAFT) Name of input fields to cast to float. "
+            "Use | for multiple. "
+            "Example: latitude|longitude|field_c",
+            dest="cast_float",
+            nargs="?",
+            type=lambda x: x.split("|"),
+            default=None,
+        )
+
         return parser.parse_args()
 
     def execute_cli(self, pyargs, stdin=STDIN, stdout=sys.stdout, stderr=sys.stderr):
@@ -240,9 +263,20 @@ class Cli:
 
             prepend = ""
 
+            line_num = -1
+
             for row in reader:
-                item = geojson_item(
+                line_num += 1
+                formated_row = row_item_format(
                     row,
+                    line_num=line_num,
+                    cast_integer=pyargs.cast_integer,
+                    cast_float=pyargs.cast_float,
+                    ignore_warnings=pyargs.ignore_warnings,
+                )
+
+                item = geojson_item(
+                    formated_row,
                     pyargs.lat,
                     pyargs.lon,
                     contain_or=_contain_or,
@@ -353,10 +387,28 @@ def geojsom_item_properties(row: dict, ignore: list):
         if key in ignore:
             continue
 
-        if not value or len(value.strip()) == 0:
+        if not value or isinstance(value, str) and len(value.strip()) == 0:
             continue
 
         result[key] = value
+
+    return result
+
+
+def row_item_format(
+    row: dict,
+    line_num: int = -1,
+    cast_integer: list = None,
+    cast_float: list = None,
+    ignore_warnings: bool = False,
+):
+    result = {}
+
+    for key, value in row.items():
+        if isinstance(cast_integer, list) and key in cast_integer:
+            result[key] = int(value)
+        else:
+            result[key] = value
 
     return result
 

@@ -29,6 +29,20 @@
 - https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais/28971-base-de-faces-de-logradouros-do-brasil.html?=&t=downloads
 -->
 
+## Mapeamento de campos entre fontes governamentais e OpenStreetMap
+### Identificadores _unicos_
+
+- ref:CNES
+  - https://taginfo.openstreetmap.org/keys/ref%3ACNES#overview
+  - https://wiki.openstreetmap.org/wiki/Key:ref:CNES
+- ref:vatin ("CNPJ" no Brasil)
+  - https://taginfo.openstreetmap.org/keys/ref%3Avatin
+  - https://wiki.openstreetmap.org/wiki/Key:ref:vatin
+  - Veja também:
+    - [operator:ref:vatin (?)](https://taginfo.openstreetmap.org/keys/operator%3Aref%3Avatin#values)
+    - [not:ref:vatin](https://taginfo.openstreetmap.org/keys/not%3Aref%3Avatin#values)
+
+
 # Licença
 
 ## Código
