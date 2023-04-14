@@ -8,7 +8,10 @@
 #
 #       OPTIONS:  ---
 #
-#  REQUIREMENTS:  ---
+#  REQUIREMENTS:  - unzip
+#                 - curl
+#                 - ogr2ogr, ogrmerge.py (gdal)
+#                   - apt install gdal-bin
 #          BUGS:  ---
 #         NOTES:  ---
 #        AUTHOR:  Emerson Rocha <rocha[at]ieee.org>
@@ -24,6 +27,7 @@ set -e
 ROOTDIR="$(pwd)"
 TEMPDIR="$(pwd)/data/tmp"
 CACHEDIR="$(pwd)/data/cache"
+MEMDIR="/tmp"
 
 # https://stackoverflow.com/questions/49779281/string-similarity-with-python-sqlite-levenshtein-distance-edit-distance/49815419#49815419
 # https://stackoverflow.com/questions/13909885/how-to-add-levenshtein-function-in-mysql
@@ -55,7 +59,7 @@ tty_normal=$(tput sgr0)
 # Outputs:
 #
 #######################################
-data_ibge_logradoros_download() {
+data_ibge_logradouros_download() {
   printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
 
   id="${1}"
@@ -73,7 +77,6 @@ data_ibge_logradoros_download() {
   printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
 }
 
-
 #######################################
 # Baixa limites administrativos do IBGE
 #
@@ -84,21 +87,26 @@ data_ibge_logradoros_download() {
 #   id
 #   temporalidade
 #   exemplo_arquivo_interno
+#   layer_final
 # Outputs:
 #
 #######################################
-data_ibge_logradoros_unzip_e_gpkg() {
+data_ibge_logradouros_unzip_e_gpkg() {
   printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
 
   id="${1}"
   temporalidade="${2}"
   exemplo_arquivo_interno="${3}"
+  layer_final="${4}"
 
   _zip="${CACHEDIR}/${id}.zip"
-  _destino="${TEMPDIR}/logradouros/${temporalidade}/"
+  _destino="${TEMPDIR}/logradouros/${temporalidade}"
+
+  _merged_mem="${MEMDIR}/logradouros_${temporalidade}_${id}_merged.gpkg"
+  _destino_v2="${TEMPDIR}/logradouros_${temporalidade}_${id}_merged.gpkg"
 
   if [ ! -f "${_destino}/${exemplo_arquivo_interno}" ]; then
-  # if [ -f "${_destino}/${exemplo_arquivo_interno}" ]; then
+    # if [ -f "${_destino}/${exemplo_arquivo_interno}" ]; then
     set -x
     unzip "${_zip}" -d "${_destino}/"
 
@@ -108,16 +116,38 @@ data_ibge_logradoros_unzip_e_gpkg() {
     # mv "${IBGE_DIR_SHAPEFILES}/${IBGE_MUNICIPIO_ID}.shx" "${IBGE_DIR_SHAPEFILES}/${IBGE_MUNICIPIO_ID_FIXO}.shx"
     # mv "${IBGE_DIR_SHAPEFILES}/${IBGE_MUNICIPIO_ID}.dbf" "${IBGE_DIR_SHAPEFILES}/${IBGE_MUNICIPIO_ID_FIXO}.dbf"
 
-    for file in ${_destino}/*.shp
-    do
-      # echo "$file"
-      # set -x
-      ogr2ogr -f GPKG -append "${TEMPDIR}/logradouros_${temporalidade}_${id}.gpkg" "${file}"
-    done
+    # @TODO remover essa parte; o proximo bloco é mais otimizado do que este
+    # for file in ${_destino}/*.shp; do
+    #   # echo "$file"
+    #   # set -x
+    #   ogr2ogr -f GPKG -append "${TEMPDIR}/logradouros_${temporalidade}_${id}.gpkg" "${file}"
+    # done
 
     set +x
   else
     echo "Ja existia: ${_destino}/${exemplo_arquivo_interno}"
+  fi
+
+  # @see https://gis.stackexchange.com/questions/353776/merge-geopackages-keeping-layer-structure
+  # @see https://gdal.org/programs/ogrmerge.html
+  # ogrmerge  -f gpkg -o mergetest.gpkg -nln {LAYER_NAME} test1.gpkg
+  # ogrmerge  -append -o mergetest.gpkg -nln {LAYER_NAME} test2.gpkg test3.gpkg
+
+  if [ ! -f "${_merged_mem}" ]; then
+    # echo "todo... ${_merged_mem}"
+
+    for file in ${_destino}/*.shp; do
+      set -x
+      if [ ! -f "${_merged_mem}" ]; then
+        ogrmerge.py -f gpkg -o "${_merged_mem}" -nln "${layer_final}" "${file}"
+      else
+        ogrmerge.py -append -o "${_merged_mem}" -nln "${layer_final}" "${file}"
+      fi
+      set +x
+    done
+
+    # mv "${_merged_mem}" "$_destino_v2"
+    cp "${_merged_mem}" "$_destino_v2"
   fi
 
   # if [ ! -f "${IBGE_DIR_SHAPEFILES}/${IBGE_UF_ID_FIXO}.shp" ]; then
@@ -136,13 +166,21 @@ data_ibge_logradoros_unzip_e_gpkg() {
   printf "\t%40s\n" "${tty_green}${FUNCNAME[0]} FINISHED OKAY ${tty_normal}"
 }
 
-
 #### main ______________________________________________________________________
 
 # @see https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/malha_de_setores_censitarios/censo_2010/base_de_faces_de_logradouros_versao_2021/
 _LOGRADOUROS_ZIP_URL="https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/malha_de_setores_censitarios/censo_2010/base_de_faces_de_logradouros_versao_2021/SC/sc_faces_de_logradouros_2021.zip"
 _LOGRADOUROS_ID="IBGE_logradouros_SC"
 
+data_ibge_logradouros_download "${_LOGRADOUROS_ID}" "${_LOGRADOUROS_ZIP_URL}"
+data_ibge_logradouros_unzip_e_gpkg "${_LOGRADOUROS_ID}" "recente" "4209102_faces_de_logradouros_2021.shp" "logradouros"
 
-data_ibge_logradoros_download "${_LOGRADOUROS_ID}" "${_LOGRADOUROS_ZIP_URL}"
-data_ibge_logradoros_unzip_e_gpkg "${_LOGRADOUROS_ID}" "recente" "4209102_faces_de_logradouros_2021.shp"
+# data/tmp/logradouros/recente/4200051_faces_de_logradouros_2021.shp
+# data/tmp/logradouros/recente/4200101_faces_de_logradouros_2021.shp
+# data/tmp/logradouros/recente/4200200_faces_de_logradouros_2021.shp
+
+## Initialize
+# ogrmerge.py -f gpkg -o data/tmp/mergetest.gpkg -nln layer_name_here data/tmp/logradouros/recente/4200051_faces_de_logradouros_2021.shp
+
+## Then start merge all others
+# ogrmerge.py -append -o data/tmp/mergetest.gpkg -nln layer_name_here data/tmp/logradouros/recente/4200101_faces_de_logradouros_2021.shp data/tmp/logradouros/recente/4200200_faces_de_logradouros_2021.shp

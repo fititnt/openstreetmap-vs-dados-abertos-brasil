@@ -16,6 +16,8 @@
 #                   - apt install osmium-tool
 #                 - crudini (https://github.com/pixelb/crudini)
 #                   - pip install crudini
+#                 - gdal
+#                   - apt install gdal-bin
 #          BUGS:  ---
 #         NOTES:  ---
 #        AUTHOR:  Emerson Rocha <rocha[at]ieee.org>
