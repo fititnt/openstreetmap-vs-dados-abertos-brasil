@@ -214,6 +214,8 @@ data_cnpj_empresas_grep 'DEFESA CIVIL' "${TEMPDIR}/ReceitaFederal_CNPJ_Empresas_
 # "CNPJ_BASICO";"RAZAO_SOCIAL";"NATUREZA_JURIDICA";"QUALIFICACAO_DO_RESPONSAVEL";"CAPITAL_SOCIAL_DA_EMPRESA";"PORTE_DA_EMPRESA";"ENTE_FEDERATIVO_RESPONSAVEL"
 # zipgrep 'SAMU' data/cache/CNPJ_Empresas0.zip
 
+# grep --extended-regexp 'DEFESA CIVIL|HOSPITAL |PRONTO SOCORRO|BOMBEIROS|DELEGACIA' data/tmp/DATASUS-tbEstabelecimento.csv > data/tmp/DATASUS-tbEstabelecimento_SC-defesa-civil-et-al.csv
+
 # data_cnpj_empresas_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04-12.csv"
 # data_osm_extract_boundaries
 # data_ibge_convert_geopackage
