@@ -30,6 +30,7 @@
 import argparse
 import csv
 import json
+import re
 import sys
 
 
@@ -270,6 +271,25 @@ class Cli:
             default=None,
         )
 
+        cast_group.add_argument(
+            "--value-postcode-br",
+            help="One or more column names to format as if was Brazilan postcodes, CEP",
+            dest="value_postcode_br",
+            nargs="?",
+            type=lambda x: x.split("|"),
+            default=None,
+        )
+
+        cast_group.add_argument(
+            "--value-phone-br",
+            help="One or more column names to format as Brazilian "
+            "phone/fax/WhatsApp number",
+            dest="value_phone_br",
+            nargs="?",
+            type=lambda x: x.split("|"),
+            default=None,
+        )
+
         return parser.parse_args()
 
     def execute_cli(self, pyargs, stdin=STDIN, stdout=sys.stdout, stderr=sys.stderr):
@@ -309,6 +329,10 @@ class Cli:
 
             for row in reader:
                 line_num += 1
+
+                if not geojson_item_contain(row, contain_or=_contain_or, contain_and=_contain_and):
+                    continue
+
                 formated_row = row_item_cast(
                     row,
                     line_num=line_num,
@@ -326,6 +350,8 @@ class Cli:
                     row_v2,
                     value_fixed=pyargs.value_fixed,
                     value_prepend=pyargs.value_prepend,
+                    value_postcode_br=pyargs.value_postcode_br,
+                    value_phone_br=pyargs.value_phone_br,
                     ignore_warnings=pyargs.ignore_warnings,
                 )
 
@@ -462,6 +488,9 @@ def row_item_cast(
 
     for key, value in row.items():
         if isinstance(cast_integer, list) and key in cast_integer:
+            if not value.isnumeric() and ignore_warnings:
+                continue
+
             result[key] = int(value)
 
         elif isinstance(cast_float, list) and key in cast_float:
@@ -515,6 +544,8 @@ def row_item_values(
     row: dict,
     value_fixed: list = None,
     value_prepend: list = None,
+    value_postcode_br: list = None,
+    value_phone_br: list = None,
     ignore_warnings: bool = False,
 ):
     # result = row
@@ -530,18 +561,68 @@ def row_item_values(
             _key, _value = item.split("|")
             _value_prepend[_key] = _value
 
-    if len(_value_prepend.keys()) == 0:
-        return row
+    if len(_value_prepend.keys()) > 0:
+        for key, value in _value_prepend.items():
+            if key not in row:
+                if not ignore_warnings:
+                    # print("", file=sys.stderr)
+                    raise SyntaxError(f"row_item_column_add {key} not found")
+            else:
+                # Sometimes the value is empty, so we don't prepend
+                if row[key]:
+                    row[key] = f"{value}{row[key]}"
 
-    for key, value in _value_prepend.items():
-        if key not in row:
-            if not ignore_warnings:
-                # print("", file=sys.stderr)
-                raise SyntaxError(f"row_item_column_add {key} not found")
-        else:
-            row[key] = f"{value}{row[key]}"
+    if isinstance(value_postcode_br, list) and len(value_postcode_br) > 0:
+        for item in value_postcode_br:
+            _value = _zzz_format_cep(row[item])
+            if _value:
+                row[item] = _value
+            else:
+                row[item] = ""
+
+    if isinstance(value_phone_br, list) and len(value_phone_br) > 0:
+        for item in value_phone_br:
+            _value = _zzz_format_phone_br(row[item])
+            if _value:
+                row[item] = _value
+            else:
+                row[item] = ""
 
     return row
+
+
+def _zzz_format_cep(value: str):
+    if not value:
+        return False
+    if value.isnumeric():
+        if len(value) == 8:
+            return re.sub(r"(\d{5})(\d{3})", r"\1-\2", value)
+    return False
+
+
+def _zzz_format_phone_br(value: str):
+    if not value:
+        return False
+
+    if value.startswith("+"):
+        return value
+
+    # @TODO deal with more than one number
+
+    if value.startswith("(") and value.find(")") > -1:
+        _num_com_ddd = "".join(filter(str.isdigit, value))
+
+        _regiao = _num_com_ddd[0:2]
+        _num_loc = _num_com_ddd[2:]
+        _num_loc_p2 = _num_loc[-4:]
+        _num_loc_p1 = _num_loc.replace(_num_loc_p2, "")
+        # return "+55 " + _regiao + ' ' + _num_com_ddd[2:]
+        return "+55 " + _regiao + " " + _num_loc_p1 + " " + _num_loc_p2
+
+    # if value.isnumeric():
+    #     if len(value) == 8:
+    #         return re.sub(r"(\d{5})(\d{3})", r"\1-\2", value)
+    return False
 
 
 if __name__ == "__main__":

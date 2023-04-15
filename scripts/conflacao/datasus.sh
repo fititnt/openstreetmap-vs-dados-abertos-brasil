@@ -61,6 +61,33 @@ ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento.gpkg data/tmp/DATASUS-tbEstab
 
 ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEstabelecimento_SC.geojsonl
 
+### Santa Catarina, v2 ________________________________________________________
+./scripts/csv2geojson.py \
+    --contain-and=CO_ESTADO_GESTOR=42 \
+    --lat=NU_LATITUDE \
+    --lon=NU_LONGITUDE \
+    --delimiter=';' \
+    --encoding='latin-1' \
+    --output-type=GeoJSON \
+    --cast-integer='CO_CNES|CO_UNIDADE' \
+    --column-copy-to='NU_CNPJ|ref:vatin' \
+    --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
+    --column-copy-to='CO_CNES|ref:CNES' \
+    --column-copy-to='CO_CEP|addr:postcode' \
+    --column-copy-to='NU_ENDERECO|addr:housenumber' \
+    --column-copy-to='NO_LOGRADOURO|addr:street' \
+    --column-copy-to='NO_EMAIL|contact:email' \
+    --column-copy-to='NU_TELEFONE|contact:phone' \
+    --column-copy-to='NU_FAX|contact:fax' \
+    --value-prepend='ref:vatin|BR' \
+    --value-prepend='operator:ref:vatin|BR' \
+    --value-postcode-br='addr:postcode' \
+    --value-phone-br='contact:phone|contact:fax' \
+    --value-fixed='source|BR:DATASUS' \
+    --ignore-warnings \
+    data/tmp/DATASUS-tbEstabelecimento.csv \
+    >data/tmp/DATASUS-tbEstabelecimento_SC_v2-2023-04-12.geojson
+
 ## Para o iD
 # ./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSON --ignore-warnings --contain-and=CO_ESTADO_GESTOR=42 data/tmp/DATASUS-tbEstabelecimento.csv > data/tmp/DATASUS-tbEstabelecimento_SC.geojson
 
@@ -74,16 +101,23 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
     --encoding='latin-1' \
     --output-type=GeoJSONSeq \
     --cast-integer='CO_CNES|CO_UNIDADE' \
+    --column-copy-to='NU_CNPJ|ref:vatin' \
     --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
     --column-copy-to='CO_CNES|ref:CNES' \
     --column-copy-to='CO_CEP|addr:postcode' \
     --column-copy-to='NU_ENDERECO|addr:housenumber' \
+    --column-copy-to='NO_LOGRADOURO|addr:street' \
     --column-copy-to='NO_EMAIL|contact:email' \
     --column-copy-to='NU_TELEFONE|contact:phone' \
     --column-copy-to='NU_FAX|contact:fax' \
     --value-prepend='operator:ref:vatin|BR' \
+    --value-postcode-br='addr:postcode' \
+    --value-phone-br='contact:phone|contact:fax' \
     --value-fixed='source|BR:DATASUS' \
-    --ignore-warnings -
+    --ignore-warnings - |
+    jq
 
 # @see https://wiki.openstreetmap.org/wiki/Addresses
 # @see https://wiki.openstreetmap.org/wiki/Key:source
+# @see https://wiki.openstreetmap.org/wiki/Key:addr:place
+# @see https://wiki.openstreetmap.org/wiki/Key:phone
