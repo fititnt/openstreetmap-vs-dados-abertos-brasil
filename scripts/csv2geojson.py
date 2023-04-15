@@ -244,6 +244,32 @@ class Cli:
             default=None,
         )
 
+        cast_group.add_argument(
+            "--value-fixed",
+            help="Define a fixed string for every value of a column, "
+            "For multiple, use multiple times this parameter. "
+            "Source vs destiny column must be divided by |. "
+            "Example: <[ --value-fixed='source|BR:DATASUS' ]>",
+            dest="value_fixed",
+            nargs="?",
+            # type=lambda x: x.split("||"),
+            action="append",
+            default=None,
+        )
+
+        cast_group.add_argument(
+            "--value-prepend",
+            help="Prepend a custom string to all values in a column. "
+            "For multiple, use multiple times this parameter. "
+            "Source vs destiny column must be divided by |. "
+            "Example: <[ --value-prepend='ref:vatin|BR' ]>",
+            dest="value_prepend",
+            nargs="?",
+            # type=lambda x: x.split("||"),
+            action="append",
+            default=None,
+        )
+
         return parser.parse_args()
 
     def execute_cli(self, pyargs, stdin=STDIN, stdout=sys.stdout, stderr=sys.stderr):
@@ -283,7 +309,7 @@ class Cli:
 
             for row in reader:
                 line_num += 1
-                formated_row = row_item_format(
+                formated_row = row_item_cast(
                     row,
                     line_num=line_num,
                     cast_integer=pyargs.cast_integer,
@@ -291,15 +317,22 @@ class Cli:
                     ignore_warnings=pyargs.ignore_warnings,
                 )
 
-                row_v2 = row_item_add_column(
+                row_v2 = row_item_column_add(
                     formated_row,
                     column_copy=pyargs.column_copy,
+                    ignore_warnings=pyargs.ignore_warnings,
+                )
+                row_v3 = row_item_values(
+                    row_v2,
+                    value_fixed=pyargs.value_fixed,
+                    value_prepend=pyargs.value_prepend,
                     ignore_warnings=pyargs.ignore_warnings,
                 )
 
                 item = geojson_item(
                     # formated_row,
-                    row_v2,
+                    # row_v2,
+                    row_v3,
                     pyargs.lat,
                     pyargs.lon,
                     contain_or=_contain_or,
@@ -418,7 +451,7 @@ def geojsom_item_properties(row: dict, ignore: list):
     return result
 
 
-def row_item_format(
+def row_item_cast(
     row: dict,
     line_num: int = -1,
     cast_integer: list = None,
@@ -442,7 +475,7 @@ def row_item_format(
     return result
 
 
-def row_item_add_column(
+def row_item_column_add(
     row: dict,
     column_copy: list = None,
     cast_float: list = None,
@@ -463,7 +496,7 @@ def row_item_add_column(
         if key not in row:
             if not ignore_warnings:
                 # print("", file=sys.stderr)
-                raise SyntaxError(f"row_item_add_column {key} not found")
+                raise SyntaxError(f"row_item_column_add {key} not found")
         else:
             result[value] = result[key]
 
@@ -476,6 +509,39 @@ def row_item_add_column(
     #         result[key] = value
 
     return result
+
+
+def row_item_values(
+    row: dict,
+    value_fixed: list = None,
+    value_prepend: list = None,
+    ignore_warnings: bool = False,
+):
+    # result = row
+
+    if isinstance(value_fixed, list) and len(value_fixed) > 0:
+        for item in value_fixed:
+            _key, _value = item.split("|")
+            row[_key] = _value
+
+    _value_prepend = {}
+    if isinstance(value_prepend, list) and len(value_prepend) > 0:
+        for item in value_prepend:
+            _key, _value = item.split("|")
+            _value_prepend[_key] = _value
+
+    if len(_value_prepend.keys()) == 0:
+        return row
+
+    for key, value in _value_prepend.items():
+        if key not in row:
+            if not ignore_warnings:
+                # print("", file=sys.stderr)
+                raise SyntaxError(f"row_item_column_add {key} not found")
+        else:
+            row[key] = f"{value}{row[key]}"
+
+    return row
 
 
 if __name__ == "__main__":

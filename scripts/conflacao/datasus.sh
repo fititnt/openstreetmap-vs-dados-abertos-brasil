@@ -50,22 +50,40 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py --lat=NU_
 # https://pypi.org/project/csv2geojson/
 # pip install csv2geojson
 
-
 ./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSON --ignore-warnings data/tmp/DATASUS-tbEstabelecimento.csv >data/tmp/DATASUS-tbEstabelecimento.geojson
 ogr2ogr -nlt POINT -skipfailures points.shp geojsonfile.json OGRGeoJSON
 
 # ogr2ogr -nlt POINT -skipfailures points.shp geojsonfile.json OGRGeoJSON
 ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento.gpkg data/tmp/DATASUS-tbEstabelecimento.geojson
 
-
 ### Santa catarina ____________________________________________________________
-./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSONSeq --ignore-warnings --contain-and=CO_ESTADO_GESTOR=42 data/tmp/DATASUS-tbEstabelecimento.csv > data/tmp/DATASUS-tbEstabelecimento_SC.geojsonl
+./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSONSeq --ignore-warnings --contain-and=CO_ESTADO_GESTOR=42 data/tmp/DATASUS-tbEstabelecimento.csv >data/tmp/DATASUS-tbEstabelecimento_SC.geojsonl
 
 ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEstabelecimento_SC.geojsonl
 
 ## Para o iD
 # ./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSON --ignore-warnings --contain-and=CO_ESTADO_GESTOR=42 data/tmp/DATASUS-tbEstabelecimento.csv > data/tmp/DATASUS-tbEstabelecimento_SC.geojson
 
+exit 0
 ## Teste 1
-# head data/tmp/DATASUS-tbEstabelecimento.csv | /workspace/git/fititnt/openstreetmap-vs-dados-abertos-brasil/./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSONSeq --cast-integer='CO_CNES|CO_UNIDADE' --ignore-warnings 
-# head data/tmp/DATASUS-tbEstabelecimento.csv | /workspace/git/fititnt/openstreetmap-vs-dados-abertos-brasil/./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSONSeq --cast-integer='CO_CNES|CO_UNIDADE' --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' --column-copy-to='CO_CNES|ref:CNES' --column-copy-to='CO_CEP|addr:postcode' --ignore-warnings -
+# head data/tmp/DATASUS-tbEstabelecimento.csv | /workspace/git/fititnt/openstreetmap-vs-dados-abertos-brasil/./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSONSeq --cast-integer='CO_CNES|CO_UNIDADE' --ignore-warnings
+head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
+    --lat=NU_LATITUDE \
+    --lon=NU_LONGITUDE \
+    --delimiter=';' \
+    --encoding='latin-1' \
+    --output-type=GeoJSONSeq \
+    --cast-integer='CO_CNES|CO_UNIDADE' \
+    --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
+    --column-copy-to='CO_CNES|ref:CNES' \
+    --column-copy-to='CO_CEP|addr:postcode' \
+    --column-copy-to='NU_ENDERECO|addr:housenumber' \
+    --column-copy-to='NO_EMAIL|contact:email' \
+    --column-copy-to='NU_TELEFONE|contact:phone' \
+    --column-copy-to='NU_FAX|contact:fax' \
+    --value-prepend='operator:ref:vatin|BR' \
+    --value-fixed='source|BR:DATASUS' \
+    --ignore-warnings -
+
+# @see https://wiki.openstreetmap.org/wiki/Addresses
+# @see https://wiki.openstreetmap.org/wiki/Key:source
