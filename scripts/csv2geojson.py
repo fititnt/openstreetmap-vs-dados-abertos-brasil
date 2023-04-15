@@ -204,7 +204,9 @@ class Cli:
             action="store_true",
         )
 
-        cast_group = parser.add_argument_group("Convert/preprocess data from input")
+        cast_group = parser.add_argument_group(
+            "Convert/preprocess data from input, including generate new fields"
+        )
 
         cast_group.add_argument(
             "--cast-integer",
@@ -219,7 +221,7 @@ class Cli:
 
         cast_group.add_argument(
             "--cast-float",
-            help="(DRAFT) Name of input fields to cast to float. "
+            help="Name of input fields to cast to float. "
             "Use | for multiple. "
             "Example: latitude|longitude|field_c",
             dest="cast_float",
@@ -227,6 +229,17 @@ class Cli:
             type=lambda x: x.split("|"),
             default=None,
         )
+
+        # cast_group.add_argument(
+        #     "--column",
+        #     help="Add extra comluns "
+        #     "Use || for multiple. "
+        #     "Example: ORIGINAL_FIELD_PT|name:pt||",
+        #     dest="cast_float",
+        #     nargs="?",
+        #     type=lambda x: x.split("||"),
+        #     default=None,
+        # )
 
         return parser.parse_args()
 
@@ -407,6 +420,12 @@ def row_item_format(
     for key, value in row.items():
         if isinstance(cast_integer, list) and key in cast_integer:
             result[key] = int(value)
+
+        elif isinstance(cast_float, list) and key in cast_float:
+            if value.find(",") > -1:
+                value = value.replace(",", ".")
+
+            result[key] = float(value)
         else:
             result[key] = value
 
