@@ -212,7 +212,7 @@ class Cli:
             "--cast-integer",
             help="Name of input fields to cast to integer. "
             "Use | for multiple. "
-            "Example: field_a|field_b|field_c",
+            "Example: <[ --cast-integer='field_a|field_b|field_c' ]>",
             dest="cast_integer",
             nargs="?",
             type=lambda x: x.split("|"),
@@ -223,23 +223,26 @@ class Cli:
             "--cast-float",
             help="Name of input fields to cast to float. "
             "Use | for multiple. "
-            "Example: latitude|longitude|field_c",
+            "Example: <[ --cast-float='latitude|longitude|field_c' ]>",
             dest="cast_float",
             nargs="?",
             type=lambda x: x.split("|"),
             default=None,
         )
 
-        # cast_group.add_argument(
-        #     "--column",
-        #     help="Add extra comluns "
-        #     "Use || for multiple. "
-        #     "Example: ORIGINAL_FIELD_PT|name:pt||",
-        #     dest="cast_float",
-        #     nargs="?",
-        #     type=lambda x: x.split("||"),
-        #     default=None,
-        # )
+        cast_group.add_argument(
+            "--column-copy-to",
+            help="Add extra comluns. "
+            "For multiple, use multiple times this parameter. "
+            "Source vs destiny column must be divided by |. "
+            "Example: <[ --column-copy-to='ORIGINAL_FIELD_PT|name:pt' "
+            "--column-copy-to='CNPJ|ref:vatin' ]>",
+            dest="column_copy",
+            nargs="?",
+            # type=lambda x: x.split("||"),
+            action="append",
+            default=None,
+        )
 
         return parser.parse_args()
 
@@ -288,8 +291,15 @@ class Cli:
                     ignore_warnings=pyargs.ignore_warnings,
                 )
 
-                item = geojson_item(
+                row_v2 = row_item_add_column(
                     formated_row,
+                    column_copy=pyargs.column_copy,
+                    ignore_warnings=pyargs.ignore_warnings,
+                )
+
+                item = geojson_item(
+                    # formated_row,
+                    row_v2,
                     pyargs.lat,
                     pyargs.lon,
                     contain_or=_contain_or,
@@ -428,6 +438,42 @@ def row_item_format(
             result[key] = float(value)
         else:
             result[key] = value
+
+    return result
+
+
+def row_item_add_column(
+    row: dict,
+    column_copy: list = None,
+    cast_float: list = None,
+    ignore_warnings: bool = False,
+):
+    _column_copy = {}
+    if isinstance(column_copy, list) and len(column_copy) > 0:
+        for item in column_copy:
+            _key, _value = item.split("|")
+            _column_copy[_key] = _value
+
+    if len(_column_copy.keys()) == 0:
+        return row
+
+    result = {}
+    result = row
+    for key, value in _column_copy.items():
+        if key not in row:
+            if not ignore_warnings:
+                # print("", file=sys.stderr)
+                raise SyntaxError(f"row_item_add_column {key} not found")
+        else:
+            result[value] = result[key]
+
+    #     elif isinstance(cast_float, list) and key in cast_float:
+    #         if value.find(",") > -1:
+    #             value = value.replace(",", ".")
+
+    #         result[key] = float(value)
+    #     else:
+    #         result[key] = value
 
     return result
 

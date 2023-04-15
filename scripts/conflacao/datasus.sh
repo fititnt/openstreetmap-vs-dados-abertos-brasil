@@ -68,3 +68,4 @@ ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEs
 
 ## Teste 1
 # head data/tmp/DATASUS-tbEstabelecimento.csv | /workspace/git/fititnt/openstreetmap-vs-dados-abertos-brasil/./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSONSeq --cast-integer='CO_CNES|CO_UNIDADE' --ignore-warnings 
+# head data/tmp/DATASUS-tbEstabelecimento.csv | /workspace/git/fititnt/openstreetmap-vs-dados-abertos-brasil/./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSONSeq --cast-integer='CO_CNES|CO_UNIDADE' --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' --column-copy-to='CO_CNES|ref:CNES' --column-copy-to='CO_CEP|addr:postcode' --ignore-warnings -
