@@ -21,9 +21,9 @@
 #===============================================================================
 set -e
 
-ROOTDIR="$(pwd)"
-TEMPDIR="$(pwd)/data/tmp"
-CACHEDIR="$(pwd)/data/cache"
+#ROOTDIR="$(pwd)"
+#TEMPDIR="$(pwd)/data/tmp"
+#CACHEDIR="$(pwd)/data/cache"
 
 ## Escolas
 # - Refcode?

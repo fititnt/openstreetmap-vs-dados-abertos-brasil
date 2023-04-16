@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2317,SC2034
 #===============================================================================
 #
 #          FILE:  datasus.sh
@@ -87,6 +88,36 @@ ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEs
     --ignore-warnings \
     data/tmp/DATASUS-tbEstabelecimento.csv \
     >data/tmp/DATASUS-tbEstabelecimento_SC_v2-2023-04-12.geojson
+
+
+# --contain-and=CO_MUNICIPIO_GESTOR=4217006 \
+./scripts/csv2geojson.py \
+    --contain-and=CO_CEP=88730000 \
+    --lat=NU_LATITUDE \
+    --lon=NU_LONGITUDE \
+    --delimiter=';' \
+    --encoding='latin-1' \
+    --output-type=GeoJSON \
+    --cast-integer='CO_CNES|CO_UNIDADE' \
+    --column-copy-to='NU_CNPJ|ref:vatin' \
+    --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
+    --column-copy-to='CO_CNES|ref:CNES' \
+    --column-copy-to='CO_CEP|addr:postcode' \
+    --column-copy-to='NU_ENDERECO|addr:housenumber' \
+    --column-copy-to='NO_LOGRADOURO|addr:street' \
+    --column-copy-to='NO_EMAIL|contact:email' \
+    --column-copy-to='NU_TELEFONE|contact:phone' \
+    --column-copy-to='NU_FAX|contact:fax' \
+    --value-prepend='ref:vatin|BR' \
+    --value-prepend='operator:ref:vatin|BR' \
+    --value-postcode-br='addr:postcode' \
+    --value-phone-br='contact:phone|contact:fax' \
+    --value-fixed='source|BR:DATASUS' \
+    --ignore-warnings \
+    data/tmp/DATASUS-tbEstabelecimento.csv \
+    >data/tmp/DATASUS-tbEstabelecimento_SC-SaoLudgero_v2-2023-04-12.geojson
+
+# 88730000
 
 ## Para o iD
 # ./scripts/csv2geojson.py --lat=NU_LATITUDE --lon=NU_LONGITUDE --delimiter=';' --encoding='latin-1' --output-type=GeoJSON --ignore-warnings --contain-and=CO_ESTADO_GESTOR=42 data/tmp/DATASUS-tbEstabelecimento.csv > data/tmp/DATASUS-tbEstabelecimento_SC.geojson

@@ -1,5 +1,3 @@
-
-
 #!/bin/bash
 #===============================================================================
 #
@@ -30,8 +28,8 @@
 #===============================================================================
 set -e
 
-ROOTDIR="$(pwd)"
-TEMPDIR="$(pwd)/data/tmp"
+#ROOTDIR="$(pwd)"
+#TEMPDIR="$(pwd)/data/tmp"
 CACHEDIR="$(pwd)/data/cache"
 
 OSM_BRASIL_URL=$(crudini --get configuracao.ini DEFAULT OSM_BRASIL_URL | tr -d '"')

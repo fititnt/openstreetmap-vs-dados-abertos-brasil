@@ -22,7 +22,7 @@
 #===============================================================================
 set -e
 
-ROOTDIR="$(pwd)"
+#ROOTDIR="$(pwd)"
 TEMPDIR="$(pwd)/data/tmp"
 CACHEDIR="$(pwd)/data/cache"
 
@@ -109,7 +109,7 @@ data_cnpj_empresas_grep() {
     echo "Cacheado ${outfile}. Delete se quiser re-gerar"
   fi
 
-  _count=$(wc -l ${outfile})
+  _count=$(wc -l "${outfile}")
 
   printf "\t%40s\n" "${tty_green} ${_count} ${tty_normal}"
 
@@ -165,7 +165,7 @@ data_cnpj_estabelecimentos_download() {
 data_cnpj_estabelecimentos_grep() {
   grep_args="${1}"
   outfile="${2}"
-  grep_args_extra="${3-''}"
+  grep_args_extra="${3:-}"
 
   printf "\n\t%40s\n" "${tty_blue}${FUNCNAME[0]} STARTED ${tty_normal}"
 
@@ -190,7 +190,7 @@ data_cnpj_estabelecimentos_grep() {
     echo "Cacheado ${outfile}. Delete se quiser re-gerar"
   fi
 
-  _count=$(wc -l ${outfile})
+  _count=$(wc -l "${outfile}")
 
   printf "\t%40s\n" "${tty_green} ${_count} ${tty_normal}"
 
@@ -204,8 +204,11 @@ data_cnpj_empresas_download
 data_cnpj_estabelecimentos_download
 data_cnpj_estabelecimentos_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04-12.csv"
 data_cnpj_estabelecimentos_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC-defesa-civil-et-al_2023-04-12.csv" 'DEFESA CIVIL|HOSPITAL |PRONTO SOCORRO|BOMBEIROS|DELEGACIA'
+data_cnpj_estabelecimentos_grep ';"SC";"8335";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC-SaoLudgero_2023-04-12.csv"
 
 data_cnpj_empresas_grep 'DEFESA CIVIL' "${TEMPDIR}/ReceitaFederal_CNPJ_Empresas__BR-defesacivil_2023-04-12.csv"
+
+
 
 # Nao aceita regex extendido
 # data_cnpj_empresas_grep 'DEFESA CIVIL|HOSPITAL |PRONTO SOCORRO|BOMBEIROS|DELEGACIA' "${TEMPDIR}/ReceitaFederal_CNPJ_Empresas__defesacivil_v2_2023-04-12.csv"
