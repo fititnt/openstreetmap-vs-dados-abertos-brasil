@@ -43,7 +43,20 @@ set -e
 ## (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/inep-data/catalogo-de-escolas)
 ## Não tem link direto, requer simuilar navegador completo
 
-./scripts/csv2geojson.py --lat=Latitude --lon=Longitude --delimiter=';' data/tmp/INEP_SC_2023-04-11.csv
+# ./scripts/csv2geojson.py --lat=Latitude --lon=Longitude --delimiter=';' data/tmp/INEP_SC_2023-04-11.csv
 
-./scripts/csv2geojson.py --lat=Latitude --lon=Longitude --delimiter=';' data/tmp/INEP_SC_2023-04-11.csv > data/tmp/INEP_SC_2023-04-11.geojson
+# ./scripts/csv2geojson.py --lat=Latitude --lon=Longitude --delimiter=';' data/tmp/INEP_SC_2023-04-11.csv > data/tmp/INEP_SC_2023-04-11.geojson
+./scripts/csv2geojson.py \
+    --lat='Latitude' \
+    --lon='Longitude' \
+    --delimiter=';' \
+    --output-type=GeoJSON \
+    --value-fixed='amenity|school' \
+    --column-copy-to='Escola|name' \
+    --column-copy-to='Código INEP|ref:INEP' \
+    --column-copy-to='Telefone|contact:phone' \
+    --value-phone-br='contact:phone' \
+    --value-fixed='source|BR:INEP' \
+    data/tmp/INEP_SC_2023-04-11.csv \
+    >data/tmp/INEP_SC-v2_2023-04-11.geojson
 # data/tmp/INEP_SC_2023-04-11.csv

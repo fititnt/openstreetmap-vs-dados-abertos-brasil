@@ -41,7 +41,8 @@
   - Veja também:
     - [operator:ref:vatin (?)](https://taginfo.openstreetmap.org/keys/operator%3Aref%3Avatin#values)
     - [not:ref:vatin](https://taginfo.openstreetmap.org/keys/not%3Aref%3Avatin#values)
-
+- ref:INEP
+  - https://wiki.openstreetmap.org/wiki/Key:ref:INEP
 
 # Licença
 
