@@ -155,6 +155,14 @@ unzip_cached_on_tmp "bc25_sc_2020-10-01.zip" "" "bc25_sc_2020-10-01.gpkg"
 gpkg_layer_to_geojson_on_tmp "bc25_sc_2020-10-01.gpkg" "cbge_cemiterio_p" "bc25_sc_2020-10-01__cbge_cemiterio_p.geojson"
 gpkg_layer_to_geojson_on_tmp "bc25_sc_2020-10-01.gpkg" "enc_torre_energia_p" "bc25_sc_2020-10-01__enc_torre_energia_p.geojson"
 
+
+
+
+# plant:source=hydro
+# https://overpass-turbo.eu/s/1tS7
+#  [out:json][timeout:25];area(id:3600296584)->.searchArea;(nwr["plant:source"="hydro"](area.searchArea););out body;>;out skel qt;
+gpkg_layer_to_geojson_on_tmp "bc25_sc_2020-10-01.gpkg" "enc_hidreletrica_p" "bc25_sc_2020-10-01__enc_hidreletrica_p.geojson"
+
 # ogr2ogr -f GeoJSON data/tmp/bc25_sc_2020-10-01__cbge_cemiterio_p.geojson data/tmp/bc25_sc_2020-10-01.gpkg cbge_cemiterio_p
 
 # data_ibge_sc_gpkg_download "bc25_sc_2020-10-01" "${IBGE_SC_GPKG_ZIP_URL}"
@@ -173,3 +181,11 @@ exit 1
   --output-log=data/tmp/diff-points-ab.log.txt \
   tests/data/data-points_a.geojson \
   tests/data/data-points_b.geojson
+
+
+
+# shellcheck disable=SC2317,SC2034
+./scripts/geojson-diff.py --output-diff=data/tmp/diff-points-ab.geojson \
+  --output-log=data/tmp/diff-points-ab.log.txt \
+  data/tmp/bc25_sc_2020-10-01__enc_hidreletrica_p.geojson \
+  data/tmp/overpass-hidro-sc.geojson

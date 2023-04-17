@@ -20,19 +20,13 @@
 #       COMPANY:  EticaAI
 #       LICENSE:  Public Domain dedication or Zero-Clause BSD
 #                 SPDX-License-Identifier: Unlicense OR 0BSD
-#       VERSION:  v0.2.0
+#       VERSION:  v0.4.0
 #       CREATED:  2023-04-16 22:36 BRT
-#      REVISION:  ---
+#      REVISION:  2023-04-17 02:32 BRT v0.4.0 accept Overpas GeoJSON flavor
 # ==============================================================================
 
-
-# import geopandas
-# import os
 import argparse
-import csv
 import json
-import math
-import re
 import sys
 import logging
 from haversine import haversine, Unit
@@ -40,7 +34,7 @@ from haversine import haversine, Unit
 PROGRAM = "geojson-diff"
 DESCRIPTION = """
 ------------------------------------------------------------------------------
-GeoJSON diff
+GeoJSON++ diff
 
 ------------------------------------------------------------------------------
 """.format(
@@ -61,6 +55,15 @@ __EPILOGUM__ = """
 --output-log=data/tmp/diff-points-ab.log.txt \
 tests/data/data-points_a.geojson \
 tests/data/data-points_b.geojson
+
+GeoJSON (center point) example with overpass . . . . . . . . . . . . . . . . .
+    [out:json][timeout:25];
+    {{geocodeArea:Santa Catarina}}->.searchArea;
+    (
+    nwr["plant:source"="hydro"](area.searchArea);
+    );
+    convert item ::=::,::geom=geom(),_osm_type=type();
+    out center;
 
 ------------------------------------------------------------------------------
                             EXEMPLŌRUM GRATIĀ
@@ -141,7 +144,8 @@ class Cli:
         # logger.info("@TODO")
         # logger.critical("@TODO 2")
 
-        distance_okay = 50
+        # distance_okay = 50
+        distance_okay = 1000
         distance_permissive = 250
 
         geodiff = GeojsonCompare(
@@ -179,12 +183,21 @@ class DatasetInMemory:
                 item["geometry"]["coordinates"][0],
             )
             props = None
+
+            # Overpass geojson store in "tags" instead of "properties"
+            _properties = "tags" if "tags" in item else "properties"
+
+            # if (
+            #     "properties" in item
+            #     and item["properties"]
+            #     and len(item["properties"].keys())
+            # ):
             if (
-                "properties" in item
-                and item["properties"]
-                and len(item["properties"].keys())
+                _properties in item
+                and item[_properties]
+                and len(item[_properties].keys())
             ):
-                props = item["properties"]
+                props = item[_properties]
             self.items.append((coords, props))
 
 
@@ -214,7 +227,12 @@ class GeojsonCompare:
         with open(path, "r") as file:
             # TODO optimize geojsonl
             jdict = json.load(file)
-            for feat in jdict["features"]:
+
+            # Overpass geojson store in "elements" instead of "features"
+            container = "elements" if "elements" in jdict else "features"
+
+            # for feat in jdict["features"]:
+            for feat in jdict[container]:
                 # print(feat)
                 data.add_item(feat)
 
@@ -223,7 +241,7 @@ class GeojsonCompare:
     def compute(self):
         # for item in self.a.items:
         for index_a in range(0, len(self.a.items)):
-            print(f"    > teste A i{index_a}", self.a.items[index_a])
+            # print(f"    > teste A i{index_a}", self.a.items[index_a])
             found = False
             # if not self.a.items[index_a]:
             #     self.matrix.append(None)
@@ -237,13 +255,13 @@ class GeojsonCompare:
                     if self.a.items[index_a] == self.b.items[index_b]:
                         self.matrix.append((index_b, MATCH_EXACT, 0))
                         found = True
-                        print("  <<<<< dist zero a")
+                        # print("  <<<<< dist zero a")
 
                     elif self.a.items[index_a][0] == self.b.items[index_b][0]:
                         # perfect match, except tags (TODO improve this check)
                         self.matrix.append((index_b, MATCH_EXACT, 0))
                         found = True
-                        print("  <<<< dist zero b")
+                        # print("  <<<< dist zero b")
 
                     else:
                         dist = haversine(
@@ -251,7 +269,7 @@ class GeojsonCompare:
                             self.b.items[index_b][0],
                             unit=Unit.METERS,
                         )
-                        print(f"        >> teste A i{index_a} vs B i{index_b}", dist)
+                        # print(f"        >> teste A i{index_a} vs B i{index_b}", dist)
                         if dist <= self.distance_okay:
                             # TODO sort by near
                             candidates.append((dist, index_b))
@@ -264,9 +282,9 @@ class GeojsonCompare:
 
     def debug(self):
         print(self.a)
-        print("dataset a", self.a.items)
+        # print("dataset a", self.a.items)
         print(self.b)
-        print("dataset b", self.b.items)
+        # print("dataset b", self.b.items)
         print("matrix", self.matrix)
 
     def summary(self):
