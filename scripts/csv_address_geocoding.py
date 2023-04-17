@@ -20,7 +20,7 @@
 #       COMPANY:  EticaAI
 #       LICENSE:  Public Domain dedication or Zero-Clause BSD
 #                 SPDX-License-Identifier: Unlicense OR 0BSD
-#       VERSION:  v0.12.0
+#       VERSION:  v0.2.0
 #       CREATED:  2023-04-13 22:14 BRT
 #      REVISION:  ---
 # ==============================================================================

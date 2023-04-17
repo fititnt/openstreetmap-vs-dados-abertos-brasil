@@ -24,7 +24,7 @@
 #===============================================================================
 set -e
 
-ROOTDIR="$(pwd)"
+# ROOTDIR="$(pwd)"
 TEMPDIR="$(pwd)/data/tmp"
 CACHEDIR="$(pwd)/data/cache"
 MEMDIR="/tmp"

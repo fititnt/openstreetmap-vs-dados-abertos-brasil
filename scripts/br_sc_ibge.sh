@@ -166,3 +166,10 @@ gpkg_layer_to_geojson_on_tmp "bc25_sc_2020-10-01.gpkg" "enc_torre_energia_p" "bc
 # ogr2ogr -f GeoJSON data/tmp/bc25_sc_2020-10-01.gpkg -nln cbge_cemiterio_p data/tmp/bc25_sc_2020-10-01__cbge_cemiterio_p.geojson
 # ogr2ogr -f GeoJSON data/tmp/bc25_sc_2020-10-01.gpkg data/tmp/bc25_sc_2020-10-01__cbge_cemiterio_p.geojson
 # ogr2ogr -f GeoJSON data/tmp/bc25_sc_2020-10-01__cbge_cemiterio_p.geojson -nln cbge_cemiterio_p data/tmp/bc25_sc_2020-10-01.gpkg
+
+exit 1
+# shellcheck disable=SC2317,SC2034
+./scripts/geojson-diff.py --output-diff=data/tmp/diff-points-ab.geojson \
+  --output-log=data/tmp/diff-points-ab.log.txt \
+  tests/data/data-points_a.geojson \
+  tests/data/data-points_b.geojson

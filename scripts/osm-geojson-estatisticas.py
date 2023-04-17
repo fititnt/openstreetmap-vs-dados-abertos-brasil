@@ -60,7 +60,7 @@ __EPILOGUM__ = """
                             EXEMPLŌRUM GRATIĀ
 ------------------------------------------------------------------------------
 Crie GeoJSONSeq  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-(Exempmplo com osmium)
+(Exemplo com osmium)
     osmium export \
       --output-format=geojsonseq \
       --geometry-types=polygon \
