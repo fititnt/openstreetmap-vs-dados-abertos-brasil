@@ -31,9 +31,11 @@
 import argparse
 import csv
 import json
+import math
 import re
 import sys
 import logging
+from haversine import haversine, Unit
 
 PROGRAM = "geojson-diff"
 DESCRIPTION = """
@@ -135,10 +137,16 @@ class Cli:
         # outlog = pyargs.outlog then
 
         # print("@TODO")
-        print(pyargs)
-        logger.info("@TODO")
-        logger.critical("@TODO 2")
-        geodiff = GeojsonCompare(pyargs.geodataset_a, pyargs.geodataset_b, logger)
+        # print(pyargs)
+        # logger.info("@TODO")
+        # logger.critical("@TODO 2")
+
+        distance_okay = 50
+        distance_permissive = 250
+
+        geodiff = GeojsonCompare(
+            pyargs.geodataset_a, pyargs.geodataset_b, distance_okay, logger
+        )
         geodiff.debug()
         return self.EXIT_OK
 
@@ -152,7 +160,7 @@ class DatasetInMemory:
 
     def add_item(self, item: dict):
         self.index += 1
-        self.items.append(None)
+        # self.items.append(None)
 
         if (
             not item
@@ -186,12 +194,18 @@ class GeojsonCompare:
     @TODO optimize for very large files
     """
 
-    def __init__(self, geodataset_a: str, geodataset_b: str, logger) -> None:
+    def __init__(
+        self, geodataset_a: str, geodataset_b: str, distance_okay: int, logger
+    ) -> None:
+        self.distance_okay = distance_okay
         self.a = self._load_geojson(geodataset_a, "A")
         self.b = self._load_geojson(geodataset_b, "B")
         self.matrix = []
 
         self.compute()
+
+        logger.info(self.summary())
+
         # pass
 
     def _load_geojson(self, path, alias) -> DatasetInMemory:
@@ -201,27 +215,73 @@ class GeojsonCompare:
             # TODO optimize geojsonl
             jdict = json.load(file)
             for feat in jdict["features"]:
-                print(feat)
+                # print(feat)
                 data.add_item(feat)
 
         return data
 
     def compute(self):
         # for item in self.a.items:
-        for index_a in range(0, len(self.a.items) - 1):
-            if not self.a.items[index_a]:
-                self.matrix.append(self.a.items[index_a])
-            else:
-                for index_b in range(0, len(self.b.items) - 1):
-                    pass
-                pass
+        for index_a in range(0, len(self.a.items)):
+            print(f"    > teste A i{index_a}", self.a.items[index_a])
+            found = False
+            # if not self.a.items[index_a]:
+            #     self.matrix.append(None)
+            # else:
+            if self.a.items[index_a]:
+                candidates = []
+                for index_b in range(0, len(self.b.items)):
+                    # print("oibb", len(self.b.items))
+
+                    # Try perfect match (including tags)
+                    if self.a.items[index_a] == self.b.items[index_b]:
+                        self.matrix.append((index_b, MATCH_EXACT, 0))
+                        found = True
+                        print("  <<<<< dist zero a")
+
+                    elif self.a.items[index_a][0] == self.b.items[index_b][0]:
+                        # perfect match, except tags (TODO improve this check)
+                        self.matrix.append((index_b, MATCH_EXACT, 0))
+                        found = True
+                        print("  <<<< dist zero b")
+
+                    else:
+                        dist = haversine(
+                            self.a.items[index_a][0],
+                            self.b.items[index_b][0],
+                            unit=Unit.METERS,
+                        )
+                        print(f"        >> teste A i{index_a} vs B i{index_b}", dist)
+                        if dist <= self.distance_okay:
+                            # TODO sort by near
+                            candidates.append((dist, index_b))
+                            self.matrix.append((index_b, MATCH_NEAR, round(dist, 2)))
+                            found = True
+                        # break
+
+            if not found:
+                self.matrix.append(None)
 
     def debug(self):
         print(self.a)
-        print(self.a.items)
+        print("dataset a", self.a.items)
         print(self.b)
-        print(self.b.items)
-        print(self.matrix)
+        print("dataset b", self.b.items)
+        print("matrix", self.matrix)
+
+    def summary(self):
+        lines = []
+        lines.append("@TODO summary")
+
+        found = 0
+        for item in self.matrix:
+            if item:
+                found += 1
+
+        lines.append(f"A {len(self.a.items)} | {found}")
+        lines.append(f"B {len(self.b.items)} | _")
+
+        return "\n".join(lines)
 
 
 if __name__ == "__main__":
