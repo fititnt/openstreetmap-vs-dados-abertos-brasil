@@ -11,6 +11,7 @@
 #       OPTIONS:  ---
 #
 #  REQUIREMENTS:  - python3
+#                   - haversine (pip install haversine)
 #          BUGS:  ---
 #         NOTES:  ---
 #       AUTHORS:  Emerson Rocha <rocha[at]ieee.org>
@@ -32,7 +33,7 @@ import csv
 import json
 import re
 import sys
-
+import logging
 
 PROGRAM = "geojson-diff"
 DESCRIPTION = """
@@ -68,6 +69,9 @@ tests/data/data-points_b.geojson
 
 STDIN = sys.stdin.buffer
 
+MATCH_EXACT = 1
+MATCH_NEAR = 3
+
 
 class Cli:
     """Main CLI parser"""
@@ -94,8 +98,8 @@ class Cli:
             epilog=__EPILOGUM__,
         )
 
-        parser.add_argument("data-a", help="GeoJSON dataset 'A'")
-        parser.add_argument("data-b", help="GeoJSON dataset 'B'")
+        parser.add_argument("geodataset_a", help="GeoJSON dataset 'A'")
+        parser.add_argument("geodataset_b", help="GeoJSON dataset 'B'")
 
         parser.add_argument(
             "--output-diff",
@@ -109,181 +113,115 @@ class Cli:
             "--output-log",
             help="Path to output file",
             dest="outlog",
+            default=None,
             required=False,
             nargs="?",
         )
 
-        # parser.add_argument(
-        #     "--lat",
-        #     help="the name of the latitude column",
-        #     dest="lat",
-        #     required=True,
-        #     nargs="?",
-        # )
-
-        # parser.add_argument(
-        #     "--lon",
-        #     help="the name of the longitude column",
-        #     dest="lon",
-        #     required=True,
-        #     nargs="?",
-        # )
-
-        # parser.add_argument(
-        #     "--contain-or",
-        #     help="If defined, only results that match at least one clause"
-        #     " will appear on output. Accept multiple values."
-        #     "--contain-or=tag1=value1 --contain-or=tag2=value2",
-        #     dest="contain_or",
-        #     nargs="?",
-        #     action="append",
-        # )
-
-        # parser.add_argument(
-        #     "--contain-and",
-        #     help="If defined, only results that match all clauses"
-        #     " will appear on output. Accept multiple values."
-        #     "--contain-and=tag1=value1 --contain-and=tag2=value2",
-        #     dest="contain_and",
-        #     nargs="?",
-        #     action="append",
-        # )
-
-        # parser.add_argument(
-        #     "--delimiter",
-        #     help="the type of delimiter",
-        #     dest="delimiter",
-        #     default=",",
-        #     required=False,
-        #     nargs="?",
-        # )
-
-        # parser.add_argument(
-        #     "--encoding",
-        #     help="the type of delimiter",
-        #     dest="encoding",
-        #     default="utf-8",
-        #     required=False,
-        #     nargs="?",
-        # )
-
-        # parser.add_argument(
-        #     "--output-type",
-        #     help="Change the default output type",
-        #     dest="outfmt",
-        #     default="GeoJSON",
-        #     # geojsom
-        #     # geojsonl
-        #     choices=[
-        #         "GeoJSON",
-        #         "GeoJSONSeq",
-        #     ],
-        #     required=False,
-        #     nargs="?",
-        # )
-
-        # parser.add_argument(
-        #     "--ignore-warnings",
-        #     help="Ignore some errors (such as empty latitude/longitude values)",
-        #     dest="ignore_warnings",
-        #     action="store_true",
-        # )
-
-        # cast_group = parser.add_argument_group(
-        #     "Convert/preprocess data from input, including generate new fields"
-        # )
-
-        # cast_group.add_argument(
-        #     "--cast-integer",
-        #     help="Name of input fields to cast to integer. "
-        #     "Use | for multiple. "
-        #     "Example: <[ --cast-integer='field_a|field_b|field_c' ]>",
-        #     dest="cast_integer",
-        #     nargs="?",
-        #     type=lambda x: x.split("|"),
-        #     default=None,
-        # )
-
-        # cast_group.add_argument(
-        #     "--cast-float",
-        #     help="Name of input fields to cast to float. "
-        #     "Use | for multiple. "
-        #     "Example: <[ --cast-float='latitude|longitude|field_c' ]>",
-        #     dest="cast_float",
-        #     nargs="?",
-        #     type=lambda x: x.split("|"),
-        #     default=None,
-        # )
-
-        # cast_group.add_argument(
-        #     "--column-copy-to",
-        #     help="Add extra comluns. "
-        #     "For multiple, use multiple times this parameter. "
-        #     "Source vs destiny column must be divided by |. "
-        #     "Example: <[ --column-copy-to='ORIGINAL_FIELD_PT|name:pt' "
-        #     "--column-copy-to='CNPJ|ref:vatin' ]>",
-        #     dest="column_copy",
-        #     nargs="?",
-        #     # type=lambda x: x.split("||"),
-        #     action="append",
-        #     default=None,
-        # )
-
-        # cast_group.add_argument(
-        #     "--value-fixed",
-        #     help="Define a fixed string for every value of a column, "
-        #     "For multiple, use multiple times this parameter. "
-        #     "Source vs destiny column must be divided by |. "
-        #     "Example: <[ --value-fixed='source|BR:DATASUS' ]>",
-        #     dest="value_fixed",
-        #     nargs="?",
-        #     # type=lambda x: x.split("||"),
-        #     action="append",
-        #     default=None,
-        # )
-
-        # cast_group.add_argument(
-        #     "--value-prepend",
-        #     help="Prepend a custom string to all values in a column. "
-        #     "For multiple, use multiple times this parameter. "
-        #     "Source vs destiny column must be divided by |. "
-        #     "Example: <[ --value-prepend='ref:vatin|BR' ]>",
-        #     dest="value_prepend",
-        #     nargs="?",
-        #     # type=lambda x: x.split("||"),
-        #     action="append",
-        #     default=None,
-        # )
-
-        # cast_group.add_argument(
-        #     "--value-postcode-br",
-        #     help="One or more column names to format as if was Brazilan postcodes, CEP",
-        #     dest="value_postcode_br",
-        #     nargs="?",
-        #     type=lambda x: x.split("|"),
-        #     default=None,
-        # )
-
-        # cast_group.add_argument(
-        #     "--value-phone-br",
-        #     help="One or more column names to format as Brazilian "
-        #     "phone/fax/WhatsApp number",
-        #     dest="value_phone_br",
-        #     nargs="?",
-        #     type=lambda x: x.split("|"),
-        #     default=None,
-        # )
-
         return parser.parse_args()
 
     def execute_cli(self, pyargs, stdin=STDIN, stdout=sys.stdout, stderr=sys.stderr):
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+        if pyargs.outlog:
+            fh = logging.FileHandler(pyargs.outlog)
+            logger.addHandler(fh)
+        else:
+            ch = logging.StreamHandler()
+            logger.addHandler(ch)
+
         # input_file = STDIN if pyargs.input == "-" else pyargs.input
 
-        # outlog = pyargs.outlog then 
+        # outlog = pyargs.outlog then
 
-
-        print("@TODO")
+        # print("@TODO")
+        print(pyargs)
+        logger.info("@TODO")
+        logger.critical("@TODO 2")
+        geodiff = GeojsonCompare(pyargs.geodataset_a, pyargs.geodataset_b, logger)
+        geodiff.debug()
         return self.EXIT_OK
+
+
+class DatasetInMemory:
+    def __init__(self, alias: str) -> None:
+        self.alias = alias
+        self.index = -1
+        self.items = []
+        pass
+
+    def add_item(self, item: dict):
+        self.index += 1
+        self.items.append(None)
+
+        if (
+            not item
+            or "geometry" not in item
+            or "coordinates" not in item["geometry"]
+            or "type" not in item
+        ):
+            # Really bad input item
+            self.items.append(False)
+        elif item["geometry"]["type"] != "Point":
+            # For now ignoring non Point features
+            self.items.append(None)
+        else:
+            coords = (
+                item["geometry"]["coordinates"][1],
+                item["geometry"]["coordinates"][0],
+            )
+            props = None
+            if (
+                "properties" in item
+                and item["properties"]
+                and len(item["properties"].keys())
+            ):
+                props = item["properties"]
+            self.items.append((coords, props))
+
+
+class GeojsonCompare:
+    """GeojsonCompare
+
+    @TODO optimize for very large files
+    """
+
+    def __init__(self, geodataset_a: str, geodataset_b: str, logger) -> None:
+        self.a = self._load_geojson(geodataset_a, "A")
+        self.b = self._load_geojson(geodataset_b, "B")
+        self.matrix = []
+
+        self.compute()
+        # pass
+
+    def _load_geojson(self, path, alias) -> DatasetInMemory:
+        data = DatasetInMemory(alias)
+
+        with open(path, "r") as file:
+            # TODO optimize geojsonl
+            jdict = json.load(file)
+            for feat in jdict["features"]:
+                print(feat)
+                data.add_item(feat)
+
+        return data
+
+    def compute(self):
+        # for item in self.a.items:
+        for index_a in range(0, len(self.a.items) - 1):
+            if not self.a.items[index_a]:
+                self.matrix.append(self.a.items[index_a])
+            else:
+                for index_b in range(0, len(self.b.items) - 1):
+                    pass
+                pass
+
+    def debug(self):
+        print(self.a)
+        print(self.a.items)
+        print(self.b)
+        print(self.b.items)
+        print(self.matrix)
 
 
 if __name__ == "__main__":

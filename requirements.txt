@@ -1,5 +1,8 @@
+# Some dependencies here may not be really required by each individual python
+# scripts on scripts/
 osmium
 crudini
 geopandas
 area
 geopy
+haversine
