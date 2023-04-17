@@ -155,9 +155,6 @@ unzip_cached_on_tmp "bc25_sc_2020-10-01.zip" "" "bc25_sc_2020-10-01.gpkg"
 gpkg_layer_to_geojson_on_tmp "bc25_sc_2020-10-01.gpkg" "cbge_cemiterio_p" "bc25_sc_2020-10-01__cbge_cemiterio_p.geojson"
 gpkg_layer_to_geojson_on_tmp "bc25_sc_2020-10-01.gpkg" "enc_torre_energia_p" "bc25_sc_2020-10-01__enc_torre_energia_p.geojson"
 
-
-
-
 # plant:source=hydro
 # https://overpass-turbo.eu/s/1tS7
 #  [out:json][timeout:25];area(id:3600296584)->.searchArea;(nwr["plant:source"="hydro"](area.searchArea););out body;>;out skel qt;
@@ -177,15 +174,24 @@ gpkg_layer_to_geojson_on_tmp "bc25_sc_2020-10-01.gpkg" "enc_hidreletrica_p" "bc2
 
 exit 1
 # shellcheck disable=SC2317,SC2034
-./scripts/geojson-diff.py --output-diff=data/tmp/diff-points-ab.geojson \
+./scripts/geojson-diff.py \
+  --output-diff-geojson=data/tmp/diff-points-ab.geojson \
   --output-log=data/tmp/diff-points-ab.log.txt \
   tests/data/data-points_a.geojson \
   tests/data/data-points_b.geojson
 
-
-
 # shellcheck disable=SC2317,SC2034
-./scripts/geojson-diff.py --output-diff=data/tmp/diff-points-ab.geojson \
+./scripts/geojson-diff.py \
+  --output-diff-geojson=data/tmp/diff-points-ab.geojson \
   --output-log=data/tmp/diff-points-ab.log.txt \
+  --tolerate-distance=1000 \
   data/tmp/bc25_sc_2020-10-01__enc_hidreletrica_p.geojson \
   data/tmp/overpass-hidro-sc.geojson
+
+# shellcheck disable=SC2317,SC2034
+./scripts/geojson-diff.py \
+  --output-diff-geojson=data/tmp/diff-points-ab.geojson \
+  --output-log=data/tmp/diff-points-ab.log.txt \
+  --tolerate-distance=1000 \
+  data/tmp/overpass-hidro-sc.geojson \
+  data/tmp/bc25_sc_2020-10-01__enc_hidreletrica_p.geojson

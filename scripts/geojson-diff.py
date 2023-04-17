@@ -26,9 +26,11 @@
 # ==============================================================================
 
 import argparse
+import csv
 import json
 import sys
 import logging
+from typing import List
 from haversine import haversine, Unit
 
 PROGRAM = "geojson-diff"
@@ -107,10 +109,26 @@ class Cli:
         parser.add_argument("geodataset_b", help="GeoJSON dataset 'B'")
 
         parser.add_argument(
-            "--output-diff",
-            help="Path to output file",
-            dest="outdiff",
-            required=True,
+            "--output-diff-geojson",
+            help="(DRAFT) Path to output GeoJSON diff file",
+            dest="outdiffgeo",
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
+            "--output-diff-csv",
+            help="(DRAFT) Path to output CSV diff file",
+            dest="outdiffcsv",
+            required=False,
+            nargs="?",
+        )
+
+        parser.add_argument(
+            "--output-diff-tsv",
+            help="(DRAFT) Path to output TSV (Tab-separated values) diff file",
+            dest="outdiffcsv",
+            required=False,
             nargs="?",
         )
 
@@ -122,6 +140,25 @@ class Cli:
             required=False,
             nargs="?",
         )
+
+        parser.add_argument(
+            "--tolerate-distance",
+            help="Typical maximum distance for features match if not "
+            "exact same point. In meters. Default to 100",
+            dest="tdist",
+            default="100",
+            required=False,
+            nargs="?",
+        )
+
+        # parser.add_argument(
+        #     "--tolerate-distance-extra",
+        #     help="Path to output file",
+        #     dest="tdist",
+        #     default="500",
+        #     required=False,
+        #     nargs="?",
+        # )
 
         return parser.parse_args()
 
@@ -145,13 +182,13 @@ class Cli:
         # logger.critical("@TODO 2")
 
         # distance_okay = 50
-        distance_okay = 1000
-        distance_permissive = 250
+        distance_okay = int(pyargs.tdist)
+        # distance_permissive = 250
 
         geodiff = GeojsonCompare(
             pyargs.geodataset_a, pyargs.geodataset_b, distance_okay, logger
         )
-        geodiff.debug()
+        # geodiff.debug()
         return self.EXIT_OK
 
 
@@ -221,7 +258,16 @@ class GeojsonCompare:
 
         # pass
 
-    def _load_geojson(self, path, alias) -> DatasetInMemory:
+    def _load_geojson(self, path: str, alias: str) -> DatasetInMemory:
+        """Load optimized version of GeoJSON++ into memory
+
+        Args:
+            path (str): _description_
+            alias (str): _description_
+
+        Returns:
+            DatasetInMemory
+        """
         data = DatasetInMemory(alias)
 
         with open(path, "r") as file:
@@ -238,7 +284,23 @@ class GeojsonCompare:
 
         return data
 
+    def _short_title(self, properties: dict) -> str:
+        if not properties or len(properties.keys()) == 0:
+            return ""
+
+        result = ""
+        if "nome" in properties:
+            result = properties["nome"]
+        if "name" in properties:
+            result = properties["name"]
+
+        if "ref" in properties:
+            result = result + f" ({properties['ref']})"
+
+        return result.strip()
+
     def compute(self):
+        """compute difference of B against A"""
         # for item in self.a.items:
         for index_a in range(0, len(self.a.items)):
             # print(f"    > teste A i{index_a}", self.a.items[index_a])
@@ -289,7 +351,7 @@ class GeojsonCompare:
 
     def summary(self):
         lines = []
-        lines.append("@TODO summary")
+        # lines.append("@TODO summary")
 
         found = 0
         for item in self.matrix:
@@ -299,7 +361,65 @@ class GeojsonCompare:
         lines.append(f"A {len(self.a.items)} | {found}")
         lines.append(f"B {len(self.b.items)} | _")
 
+        tabular_out = self.summary_tabular()
+        spamwriter = csv.writer(sys.stdout, delimiter="\t")
+        for line in tabular_out:
+            spamwriter.writerow(line)
         return "\n".join(lines)
+
+    def summary_tabular(self) -> List[list]:
+        header = [
+            "id_a",
+            "id_b",
+            "distance_ab",
+            "latitude_a",
+            "longitude_a",
+            "latitude_b",
+            "longitude_b",
+            "desc_a",
+            "desc_b",
+        ]
+        data = []
+
+        for index_a in range(0, len(self.a.items)):
+            _item_a = self.a.items[index_a]
+
+            _matrix = self.matrix[index_a]
+
+            id_a = f"A{index_a}"
+            id_b = "" if not _matrix else f"B{_matrix[0]}"
+            distance_ab = -1 if not _matrix else _matrix[2]
+            latitude_a = "" if not _item_a else _item_a[0][1]
+            longitude_a = "" if not _item_a else _item_a[0][0]
+            latitude_b = "" if not _matrix else self.b.items[_matrix[0]][0][1]
+            longitude_b = "" if not _matrix else self.b.items[_matrix[0]][0][0]
+
+            # print(self.a.items[index_a])
+            desc_a = "" if not _item_a else self._short_title(self.a.items[index_a][1])
+            desc_b = (
+                "" if not _matrix else self._short_title(self.b.items[_matrix[0]][1])
+            )
+
+            # print("index_a", index_a)
+            # pass
+            data.append(
+                [
+                    id_a,
+                    id_b,
+                    distance_ab,
+                    latitude_a,
+                    longitude_a,
+                    latitude_b,
+                    longitude_b,
+                    desc_a,
+                    desc_b,
+                ]
+            )
+
+        data.insert(0, header)
+
+        # return data.insert(0, header)
+        return data
 
 
 if __name__ == "__main__":
