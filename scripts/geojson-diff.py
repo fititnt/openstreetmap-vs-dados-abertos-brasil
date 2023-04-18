@@ -33,6 +33,9 @@ import logging
 from typing import List
 from haversine import haversine, Unit
 
+# from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon
+
 PROGRAM = "geojson-diff"
 DESCRIPTION = """
 ------------------------------------------------------------------------------
@@ -118,7 +121,7 @@ class Cli:
 
         parser.add_argument(
             "--output-diff-csv",
-            help="(DRAFT) Path to output CSV diff file",
+            help="Path to output CSV diff file",
             dest="outdiffcsv",
             required=False,
             nargs="?",
@@ -126,7 +129,7 @@ class Cli:
 
         parser.add_argument(
             "--output-diff-tsv",
-            help="(DRAFT) Path to output TSV (Tab-separated values) diff file",
+            help="Path to output TSV (Tab-separated values) diff file",
             dest="outdifftsv",
             required=False,
             nargs="?",
@@ -212,9 +215,30 @@ class DatasetInMemory:
             # Really bad input item
             self.items.append(False)
         elif item["geometry"]["type"] != "Point":
-            # For now ignoring non Point features
-            self.items.append(None)
+            if item["geometry"]["type"] == "Polygon":
+                # pass
+                # TODO
+                poly = Polygon(item["geometry"]["coordinates"][0])
+                # print(poly)
+                # print(poly.centroid)
+                # print(poly.centroid.x)
+                # print(poly.centroid.y)
+
+                coords = (poly.centroid.y, poly.centroid.x)
+                props = None
+                if (
+                    "properties" in item
+                    and item["properties"]
+                    and len(item["properties"].keys())
+                ):
+                    props = item["properties"]
+                # self.items.append(None)
+                self.items.append((coords, props))
+            else:
+                # For now ignoring non Point features
+                self.items.append(None)
         else:
+            # Exact point
             coords = (
                 item["geometry"]["coordinates"][1],
                 item["geometry"]["coordinates"][0],
@@ -319,7 +343,7 @@ class GeojsonCompare:
                         self.b.items[index_b]
                         and self.a.items[index_a] == self.b.items[index_b]
                     ):
-                        self.matrix.append((index_b, MATCH_EXACT, 0))
+                        self.matrix.append((index_b, MATCH_EXACT, 0, None))
                         found = True
                         # print("  <<<<< dist zero a")
 
@@ -328,7 +352,7 @@ class GeojsonCompare:
                         and self.a.items[index_a][0] == self.b.items[index_b][0]
                     ):
                         # perfect match, except tags (TODO improve this check)
-                        self.matrix.append((index_b, MATCH_EXACT, 0))
+                        self.matrix.append((index_b, MATCH_EXACT, 0, None))
                         found = True
                         # print("  <<<< dist zero b")
 
@@ -343,9 +367,25 @@ class GeojsonCompare:
                         if dist <= self.distance_okay:
                             # TODO sort by near
                             candidates.append((dist, index_b))
-                            self.matrix.append((index_b, MATCH_NEAR, round(dist, 2)))
+                            # self.matrix.append((index_b, MATCH_NEAR, round(dist, 2)))
                             found = True
                         # break
+
+            if found == True and len(candidates) > 0:
+                # pass
+                candidates_sorted = sorted(candidates, key=lambda tup: tup[0])
+
+                dist = candidates_sorted[0][0]
+                index_b = candidates_sorted[0][1]
+                skiped = None
+                if len(candidates) > 1:
+                    skiped = []
+                    # for i in range(1, len(candidates)):
+                    for i in range(0, len(candidates)):
+                        skiped.append(f"B{candidates[i][1]}")
+
+                # self.matrix.append((index_b, MATCH_NEAR, round(dist, 2)))
+                self.matrix.append((index_b, MATCH_NEAR, dist, skiped))
 
             if not found:
                 self.matrix.append(None)
@@ -377,6 +417,8 @@ class GeojsonCompare:
 
     def summary_tabular(self) -> List[list]:
         header = [
+            "uid_a",
+            "uid_b",
             "id_a",
             "id_b",
             "distance_ab",
@@ -386,6 +428,7 @@ class GeojsonCompare:
             "longitude_b",
             "desc_a",
             "desc_b",
+            "near_a",
         ]
         data = []
 
@@ -394,8 +437,27 @@ class GeojsonCompare:
 
             _matrix = self.matrix[index_a]
 
-            id_a = f"A{index_a}"
-            id_b = "" if not _matrix else f"B{_matrix[0]}"
+            # print(_item_a, _matrix)
+            # print(_item_a[1], _matrix)
+            # # print(_item_a[1])
+            # print('aa', _matrix)
+
+            uid_a = f"A{index_a}"
+            uid_b = "" if not _matrix else f"B{_matrix[0]}"
+            # id_a = "" if not "id" in _item_a else _item_a["id"]
+            id_a = "" if not _item_a[1] or not "id" in _item_a[1] else _item_a[1]["id"]
+            id_b = ""
+            # if _matrix and self.b.items[_matrix[0]]:
+            if (
+                _matrix
+                and self.b.items[_matrix[0]][1]
+                and "id" in self.b.items[_matrix[0]][1]
+            ):
+                # print(self.b.items[_matrix[0]][1])
+                id_b = self.b.items[_matrix[0]][1]["id"]
+                # pass
+
+            # if not _matrix or not "id" in _matrix[1] else _item_a[1]["id"]
             distance_ab = -1 if not _matrix else _matrix[2]
             latitude_a = "" if not _item_a else _item_a[0][1]
             longitude_a = "" if not _item_a else _item_a[0][0]
@@ -407,11 +469,16 @@ class GeojsonCompare:
             desc_b = (
                 "" if not _matrix else self._short_title(self.b.items[_matrix[0]][1])
             )
+            # if _matrix:
+            #     print(_matrix[3])
+            near_a = "" if not _matrix or not _matrix[3] else " ".join(_matrix[3])
 
             # print("index_a", index_a)
             # pass
             data.append(
                 [
+                    uid_a,
+                    uid_b,
                     id_a,
                     id_b,
                     distance_ab,
@@ -421,6 +488,7 @@ class GeojsonCompare:
                     longitude_b,
                     desc_a,
                     desc_b,
+                    near_a,
                 ]
             )
 

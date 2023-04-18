@@ -6,3 +6,4 @@ geopandas
 area
 geopy
 haversine
+shapely
