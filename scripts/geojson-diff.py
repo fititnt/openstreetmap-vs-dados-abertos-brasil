@@ -127,7 +127,7 @@ class Cli:
         parser.add_argument(
             "--output-diff-tsv",
             help="(DRAFT) Path to output TSV (Tab-separated values) diff file",
-            dest="outdiffcsv",
+            dest="outdifftsv",
             required=False,
             nargs="?",
         )
@@ -172,15 +172,6 @@ class Cli:
             ch = logging.StreamHandler()
             logger.addHandler(ch)
 
-        # input_file = STDIN if pyargs.input == "-" else pyargs.input
-
-        # outlog = pyargs.outlog then
-
-        # print("@TODO")
-        # print(pyargs)
-        # logger.info("@TODO")
-        # logger.critical("@TODO 2")
-
         # distance_okay = 50
         distance_okay = int(pyargs.tdist)
         # distance_permissive = 250
@@ -188,6 +179,15 @@ class Cli:
         geodiff = GeojsonCompare(
             pyargs.geodataset_a, pyargs.geodataset_b, distance_okay, logger
         )
+
+        if pyargs.outdiffcsv:
+            with open(pyargs.outdiffcsv, "w") as file:
+                tabular_writer(file, geodiff.summary_tabular(), delimiter=",")
+
+        if pyargs.outdifftsv:
+            with open(pyargs.outdifftsv, "w") as file:
+                tabular_writer(file, geodiff.summary_tabular(), delimiter="\t")
+
         # geodiff.debug()
         return self.EXIT_OK
 
@@ -254,8 +254,7 @@ class GeojsonCompare:
 
         self.compute()
 
-        logger.info(self.summary())
-
+        # logger.info(self.summary())
         # pass
 
     def _load_geojson(self, path: str, alias: str) -> DatasetInMemory:
@@ -312,20 +311,29 @@ class GeojsonCompare:
                 candidates = []
                 for index_b in range(0, len(self.b.items)):
                     # print("oibb", len(self.b.items))
+                    # print('a', self.a.items[index_a])
+                    # print('b', self.b.items[index_b][0])
 
                     # Try perfect match (including tags)
-                    if self.a.items[index_a] == self.b.items[index_b]:
+                    if (
+                        self.b.items[index_b]
+                        and self.a.items[index_a] == self.b.items[index_b]
+                    ):
                         self.matrix.append((index_b, MATCH_EXACT, 0))
                         found = True
                         # print("  <<<<< dist zero a")
 
-                    elif self.a.items[index_a][0] == self.b.items[index_b][0]:
+                    elif (
+                        self.b.items[index_b]
+                        and self.a.items[index_a][0] == self.b.items[index_b][0]
+                    ):
                         # perfect match, except tags (TODO improve this check)
                         self.matrix.append((index_b, MATCH_EXACT, 0))
                         found = True
                         # print("  <<<< dist zero b")
 
-                    else:
+                    # else:
+                    elif self.b.items[index_b]:
                         dist = haversine(
                             self.a.items[index_a][0],
                             self.b.items[index_b][0],
@@ -422,10 +430,23 @@ class GeojsonCompare:
         return data
 
 
+def tabular_writer(file_or_stdout: str, data: List[list], delimiter: str = ",") -> None:
+    """Write a tabular file
+
+    Args:
+        file_or_stdout (str): file or stdout
+        data (List[list]): List of lists with data to be outputed
+        delimiter (str, optional): Delimiter. Defaults to ",".
+    """
+    cwriter = csv.writer(file_or_stdout, delimiter=delimiter)
+    for line in data:
+        cwriter.writerow(line)
+
+
 if __name__ == "__main__":
-    cli_2600 = Cli()
-    args = cli_2600.make_args()
+    main = Cli()
+    args = main.make_args()
     # pyargs.print_help()
 
     # args.execute_cli(args)
-    cli_2600.execute_cli(args)
+    main.execute_cli(args)
