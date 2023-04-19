@@ -210,7 +210,6 @@ exit 1
   data/tmp/overpass-hidro-sc.geojson \
   data/tmp/bc25_sc_2020-10-01__enc_hidreletrica_p.geojson
 
-
 # shellcheck disable=SC2317,SC2034
 ./scripts/geojson-diff.py \
   --output-diff-geojson=data/tmp//diff-points-ab__sc-x-osm.geojson \
