@@ -38,6 +38,8 @@ from haversine import haversine, Unit
 # from shapely.geometry import Polygon, Point
 from shapely.geometry import Polygon
 
+__VERSION__ = "0.5.0"
+
 PROGRAM = "geojson-diff"
 DESCRIPTION = """
 ------------------------------------------------------------------------------
@@ -115,7 +117,7 @@ class Cli:
 
         parser.add_argument(
             "--output-diff-geojson",
-            help="Path to output GeoJSON diff file",
+            help="(Experimental) Path to output GeoJSON diff file",
             dest="outdiffgeo",
             required=False,
             nargs="?",
@@ -156,6 +158,20 @@ class Cli:
             nargs="?",
         )
 
+        advanced = parser.add_argument_group(
+            "ADVANCED. Do not upload to OpenStreetMap unless you review the output. "
+            "Requires A be an external dataset, and B be OpenStreetMap data. "
+        )
+
+        advanced.add_argument(
+            "--output-josm-file",
+            help="Output OpenStreetMap change proposal in JOSM file format",
+            dest="outosc",
+            # default="100",s
+            required=False,
+            nargs="?",
+        )
+
         # parser.add_argument(
         #     "--tolerate-distance-extra",
         #     help="Path to output file",
@@ -184,6 +200,10 @@ class Cli:
         geodiff = GeojsonCompare(
             pyargs.geodataset_a, pyargs.geodataset_b, distance_okay, logger
         )
+
+        if pyargs.outosc:
+            with open(pyargs.outosc, "w") as file:
+                file.write(geodiff.osmchange())
 
         if pyargs.outdiffcsv:
             with open(pyargs.outdiffcsv, "w") as file:
@@ -282,6 +302,8 @@ class GeojsonCompare:
         self.distance_okay = distance_okay
         self.a = self._load_geojson(geodataset_a, "A")
         self.b = self._load_geojson(geodataset_b, "B")
+        self.a_is_osm = None
+        self.b_is_osm = None
         self.matrix = []
 
         self.compute()
@@ -333,6 +355,21 @@ class GeojsonCompare:
     def compute(self):
         """compute difference of B against A"""
         # for item in self.a.items:
+
+        if len(self.a.items) > 0:
+            if "id" in self.a.items[0][1] and self.a.items[0][1]["id"].startswith(
+                ("node/", "way/", "relation/")
+            ):
+                self.a_is_osm = True
+
+        if len(self.b.items) > 0:
+            if "id" in self.b.items[0][1] and self.b.items[0][1]["id"].startswith(
+                ("node/", "way/", "relation/")
+            ):
+                self.b_is_osm = True
+
+        # print(self.a_is_osm, self.b_is_osm)
+
         for index_a in range(0, len(self.a.items)):
             # print(f"    > teste A i{index_a}", self.a.items[index_a])
             found = False
@@ -475,6 +512,34 @@ class GeojsonCompare:
             # )
 
         return dataobj
+
+    def osmchange(self):
+        # @see https://wiki.openstreetmap.org/wiki/OsmChange
+        # @see https://wiki.openstreetmap.org/wiki/JOSM_file_format
+        if not self.b_is_osm:
+            raise SyntaxError(
+                "--output-josm-file=file.osm requires Dataset B be an "
+                "OpenStreetMap-like geojson. "
+                "(id starting with node/N, way/N or relation/N)"
+            )
+
+        lines = [
+            '<?xml version="1.0" encoding="utf-8"?>',
+            "<!-- TEST ONLY, DO NOT UPLOAD! -->",
+            f'<osm version="0.6" generator="{PROGRAM} {__VERSION__}" upload="never">',
+            f"  <changeset>",
+            f'    <tag k="created_by" v="{PROGRAM} {__VERSION__}"/>',
+            f"  </changeset>",
+        ]
+
+        # <changeset>
+        #     <tag k="source" v="velobike.ru"/>
+        #     <tag k="created_by" v="OSM Conflator 1.4.1"/>
+        #     <tag k="type" v="import"/>
+        # </changeset>
+
+        lines.append("</osm>")
+        return "\n".join(lines)
 
     def summary(self):
         lines = []
