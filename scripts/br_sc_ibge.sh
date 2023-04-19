@@ -204,7 +204,7 @@ exit 1
 # osmtogeojson overpass-hidro-sc.json > overpass-hidro-sc.geojson
 # shellcheck disable=SC2317,SC2034
 ./scripts/geojson-diff.py \
-  --output-diff-geojson=data/tmp/diff-points-ab.geojson \
+  --output-diff-geojson=data/tmp/diff-points-ab__osm-x-sc.geojson \
   --output-diff-csv=data/tmp/diff-points-ab__osm-x-sc.csv \
   --tolerate-distance=1000 \
   data/tmp/overpass-hidro-sc.geojson \
@@ -213,7 +213,7 @@ exit 1
 
 # shellcheck disable=SC2317,SC2034
 ./scripts/geojson-diff.py \
-  --output-diff-geojson=data/tmp/diff-points-ab.geojson \
+  --output-diff-geojson=data/tmp//diff-points-ab__sc-x-osm.geojson \
   --output-diff-csv=data/tmp/diff-points-ab__sc-x-osm.csv \
   --tolerate-distance=1000 \
   data/tmp/bc25_sc_2020-10-01__enc_hidreletrica_p.geojson \

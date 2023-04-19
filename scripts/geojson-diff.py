@@ -12,6 +12,7 @@
 #
 #  REQUIREMENTS:  - python3
 #                   - haversine (pip install haversine)
+#                   - shapely (pip install shapely)
 #          BUGS:  ---
 #         NOTES:  ---
 #       AUTHORS:  Emerson Rocha <rocha[at]ieee.org>
@@ -20,9 +21,10 @@
 #       COMPANY:  EticaAI
 #       LICENSE:  Public Domain dedication or Zero-Clause BSD
 #                 SPDX-License-Identifier: Unlicense OR 0BSD
-#       VERSION:  v0.4.0
+#       VERSION:  v0.5.0
 #       CREATED:  2023-04-16 22:36 BRT
 #      REVISION:  2023-04-17 02:32 BRT v0.4.0 accept Overpas GeoJSON flavor
+#                 2023-04-18 00:25 BRT v0.5.0 supports Polygon (not just Point)
 # ==============================================================================
 
 import argparse
@@ -113,7 +115,7 @@ class Cli:
 
         parser.add_argument(
             "--output-diff-geojson",
-            help="(DRAFT) Path to output GeoJSON diff file",
+            help="Path to output GeoJSON diff file",
             dest="outdiffgeo",
             required=False,
             nargs="?",
@@ -191,6 +193,12 @@ class Cli:
             with open(pyargs.outdifftsv, "w") as file:
                 tabular_writer(file, geodiff.summary_tabular(), delimiter="\t")
 
+        if pyargs.outdiffgeo:
+            with open(pyargs.outdiffgeo, "w") as file:
+                geojson_diff = geodiff.diff_geojson_full()
+                file.write(json.dumps(geojson_diff, ensure_ascii=False, indent=2))
+                # tabular_writer(file, geodiff.summary_tabular(), delimiter="\t")
+
         # geodiff.debug()
         return self.EXIT_OK
 
@@ -199,8 +207,11 @@ class DatasetInMemory:
     def __init__(self, alias: str) -> None:
         self.alias = alias
         self.index = -1
+
+        # Tuple
+        # (coords, props, geometry?)
+        # geometry? = only if not already point
         self.items = []
-        pass
 
     def add_item(self, item: dict):
         self.index += 1
@@ -216,16 +227,11 @@ class DatasetInMemory:
             self.items.append(False)
         elif item["geometry"]["type"] != "Point":
             if item["geometry"]["type"] == "Polygon":
-                # pass
-                # TODO
                 poly = Polygon(item["geometry"]["coordinates"][0])
-                # print(poly)
-                # print(poly.centroid)
-                # print(poly.centroid.x)
-                # print(poly.centroid.y)
 
                 coords = (poly.centroid.y, poly.centroid.x)
                 props = None
+                geometry_original = item["geometry"]
                 if (
                     "properties" in item
                     and item["properties"]
@@ -233,7 +239,8 @@ class DatasetInMemory:
                 ):
                     props = item["properties"]
                 # self.items.append(None)
-                self.items.append((coords, props))
+                # self.items.append((coords, props))
+                self.items.append((coords, props, geometry_original))
             else:
                 # For now ignoring non Point features
                 self.items.append(None)
@@ -259,7 +266,8 @@ class DatasetInMemory:
                 and len(item[_properties].keys())
             ):
                 props = item[_properties]
-            self.items.append((coords, props))
+            # self.items.append((coords, props))
+            self.items.append((coords, props, None))
 
 
 class GeojsonCompare:
@@ -396,6 +404,61 @@ class GeojsonCompare:
         print(self.b)
         # print("dataset b", self.b.items)
         print("matrix", self.matrix)
+
+    def diff_geojson_full(self):
+        dataobj = {"type": "FeatureCollection", "features": []}
+        for index_a in range(0, len(self.a.items)):
+            _item_a = self.a.items[index_a]
+
+            _matrix = self.matrix[index_a]
+
+            final_properties = {}
+
+            # print("_item_a", _item_a)
+            if _item_a[2] is not None:
+                final_geometry = _item_a[2]
+            else:
+                # We assume will be a point
+                final_geometry = {
+                    "type": "Point",
+                    "coordinates": _item_a[0],
+                }
+
+            if _item_a[1] is not None:
+                for key, value in _item_a[1].items():
+                    final_properties[f"a.{key}"] = value
+            # else:
+            #     pass
+
+            if _matrix and self.b.items[_matrix[0]][1]:
+                # print('_matrix', _matrix)
+                for key, value in self.b.items[_matrix[0]][1].items():
+                    final_properties[f"b.{key}"] = value
+            # else:
+            #     pass
+
+            if _matrix:
+                # print("_matrix", _matrix)
+                final_properties[f"a->b.distance"] = round(_matrix[2], 2)
+                if _matrix[3]:
+                    final_properties[f"a->b.near"] = " ".join(_matrix[3])
+            else:
+                final_properties[f"a->b.distance"] = -1
+
+            res = {
+                "geometry": final_geometry,
+                "properties": final_properties,
+                "type": "Feature",
+                # "_debug": f"_item_a {_item_a}",
+                # "_original": _item_a,
+            }
+
+            dataobj["features"].append(res)
+            # dataobj["features"].append(
+            #     f"_item_a {_item_a}",
+            # )
+
+        return dataobj
 
     def summary(self):
         lines = []
