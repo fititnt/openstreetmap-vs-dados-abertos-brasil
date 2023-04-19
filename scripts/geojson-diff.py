@@ -37,6 +37,8 @@ from haversine import haversine, Unit
 
 # from shapely.geometry import Polygon, Point
 from shapely.geometry import Polygon
+from xml.sax.saxutils import escape
+
 
 __VERSION__ = "0.5.0"
 
@@ -531,6 +533,46 @@ class GeojsonCompare:
             f'    <tag k="created_by" v="{PROGRAM} {__VERSION__}"/>',
             f"  </changeset>",
         ]
+
+        count = 0
+
+        for index_a in range(0, len(self.a.items)):
+            count -= 1
+            _item_a = self.a.items[index_a]
+
+            _matrix = self.matrix[index_a]
+
+            n_lat = None
+            n_lon = None
+
+            if _item_a[2] is None:
+                n_lat = round(_item_a[0][0], 7)
+                n_lon = round(_item_a[0][1], 7)
+            else:
+                lines.append(
+                    f"  <!-- {count} ignoring non Point feature suggestion -->"
+                )
+                continue
+
+            final_properties = {}
+            if _item_a[1] is not None:
+                for key, value in _item_a[1].items():
+                    if value is not False and value is not None and value:
+                        final_properties[f"_{key}"] = escape(str(value))
+
+            # @see https://github.com/openstreetmap/osmdbt/issues/29
+            #      (topic about order of tags)
+            if len(final_properties.keys()) > 0:
+                # _kv = sorted(final_properties, key=lambda key: final_properties[key])
+
+                lines.append(
+                    f'  <node id="{count}" version="1" lat="{n_lat}" lon="{n_lon}">'
+                )
+                for key, value in sorted(final_properties.items()):
+                    lines.append(f'    <tag k="{key}" v="{value}"/>')
+                lines.append(f"  </node>")
+            else:
+                raise SyntaxError(f"No tags for item {count}. Aborting.")
 
         # <changeset>
         #     <tag k="source" v="velobike.ru"/>
