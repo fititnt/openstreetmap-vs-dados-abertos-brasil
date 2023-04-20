@@ -33,7 +33,7 @@ import csv
 import json
 import sys
 import logging
-from typing import List
+from typing import List, Type
 from haversine import haversine, Unit
 
 # from shapely.geometry import Polygon, Point
@@ -154,7 +154,11 @@ class Cli:
             nargs="?",
         )
 
-        parser.add_argument(
+        pivot = parser.add_argument_group(
+            "Parameters used to know how to conflate A and B "
+        )
+
+        pivot.add_argument(
             "--tolerate-distance",
             help="Typical maximum distance for features match if not "
             "exact same point. In meters. Default to 100",
@@ -162,6 +166,32 @@ class Cli:
             default="100",
             required=False,
             nargs="?",
+        )
+
+        pivot.add_argument(
+            "--pivot-key-main",
+            help="If defined, its an strong hint that item from A and B "
+            "alredy are mached with each other. "
+            "Use '||' if attribute on A is not the same on the B. "
+            "Accept multiple values. "
+            "Example: "
+            "--pivot-key-main='CO_CNES||ref:CNES' --pivot-key-main='ref:vatin'",
+            dest="pivot_key_main",
+            nargs="?",
+            action="append",
+        )
+
+        pivot.add_argument(
+            "--pivot-attr-2",
+            help="A non primary attribute on A and B (like phone or website) "
+            "which while imperfect, is additional hint about being about same. "
+            "Use '||' if attribute on A is not the same on the B. "
+            "Accept multiple values. "
+            "Example: "
+            "--pivot-attr-2='contact:email'",
+            dest="pivot_attr_2",
+            nargs="?",
+            action="append",
         )
 
         advanced = parser.add_argument_group(
@@ -203,8 +233,14 @@ class Cli:
         distance_okay = int(pyargs.tdist)
         # distance_permissive = 250
 
+        crules = ConflationRules(
+            distance_okay=int(pyargs.tdist),
+            pivot_key_main=parse_argument_values(pyargs.pivot_key_main),
+            pivot_attr_2=parse_argument_values(pyargs.pivot_attr_2),
+        )
+
         geodiff = GeojsonCompare(
-            pyargs.geodataset_a, pyargs.geodataset_b, distance_okay, logger
+            pyargs.geodataset_a, pyargs.geodataset_b, crules, logger
         )
 
         if pyargs.outosc:
@@ -227,6 +263,18 @@ class Cli:
 
         # geodiff.debug()
         return self.EXIT_OK
+
+
+class ConflationRules:
+    def __init__(
+        self,
+        distance_okay: int = None,
+        pivot_key_main: list = None,
+        pivot_attr_2: list = None,
+    ) -> None:
+        self.distance_okay = distance_okay
+        self.pivot_key_main = pivot_key_main
+        self.pivot_attr_2 = pivot_attr_2
 
 
 class DatasetInMemory:
@@ -303,9 +351,13 @@ class GeojsonCompare:
     """
 
     def __init__(
-        self, geodataset_a: str, geodataset_b: str, distance_okay: int, logger
+        self,
+        geodataset_a: str,
+        geodataset_b: str,
+        crules: Type["ConflationRules"],
+        logger,
     ) -> None:
-        self.distance_okay = distance_okay
+        self.distance_okay = crules.distance_okay
         self.a = self._load_geojson(geodataset_a, "A")
         self.b = self._load_geojson(geodataset_b, "B")
         self.a_is_osm = None
@@ -364,7 +416,7 @@ class GeojsonCompare:
 
         if len(self.a.items) > 0:
             for index in range(0, len(self.a.items)):
-                if not self.a.items[index][1]:
+                if not self.a.items[index] or not self.a.items[index][1]:
                     continue
 
                 if "id" in self.a.items[index][1] and self.a.items[index][1][
@@ -375,7 +427,8 @@ class GeojsonCompare:
 
         if len(self.b.items) > 0:
             for index in range(0, len(self.a.items)):
-                if not self.b.items[index][1]:
+                # print(self.b.items[index])
+                if not self.b.items[index] or not self.b.items[index][1]:
                     continue
 
                 if "id" in self.b.items[index][1] and self.b.items[index][1][
@@ -627,6 +680,7 @@ class GeojsonCompare:
             "uid_b",
             "id_a",
             "id_b",
+            "match_stage",
             "distance_ab",
             "latitude_a",
             "longitude_a",
@@ -663,6 +717,8 @@ class GeojsonCompare:
                 id_b = self.b.items[_matrix[0]][1]["id"]
                 # pass
 
+            match_stage = ""
+
             # if not _matrix or not "id" in _matrix[1] else _item_a[1]["id"]
             distance_ab = -1 if not _matrix else _matrix[2]
             latitude_a = "" if not _item_a else _item_a[0][1]
@@ -679,6 +735,10 @@ class GeojsonCompare:
             #     print(_matrix[3])
             near_a = "" if not _matrix or not _matrix[3] else " ".join(_matrix[3])
 
+            # @TODO implement stages
+            if distance_ab > -1:
+                match_stage = 5
+
             # print("index_a", index_a)
             # pass
             data.append(
@@ -687,6 +747,7 @@ class GeojsonCompare:
                     uid_b,
                     id_a,
                     id_b,
+                    match_stage,
                     distance_ab,
                     latitude_a,
                     longitude_a,
@@ -702,6 +763,27 @@ class GeojsonCompare:
 
         # return data.insert(0, header)
         return data
+
+
+class ItemMatcher:
+    def __init__(self, item, candidates: list, crules: Type[ConflationRules]) -> None:
+        self.item = item
+        self.candidates = candidates
+        self.crules = crules
+
+
+def parse_argument_values(arguments: list, delimiter: str = "||") -> dict:
+    if not arguments or len(arguments) == 0 or not arguments[0]:
+        return None
+
+    result = {}
+    for item in arguments:
+        if item.find(delimiter):
+            _key, _val = item.split(delimiter)
+            result[_key] = _val
+        else:
+            result[_key] = True
+    return result
 
 
 def tabular_writer(file_or_stdout: str, data: List[list], delimiter: str = ",") -> None:

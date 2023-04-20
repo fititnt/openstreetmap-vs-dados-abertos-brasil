@@ -59,4 +59,6 @@ set -e
     --value-fixed='source|BR:INEP' \
     data/tmp/INEP_SC_2023-04-11.csv \
     >data/tmp/INEP_SC-v2_2023-04-11.geojson
+
+    
 # data/tmp/INEP_SC_2023-04-11.csv
