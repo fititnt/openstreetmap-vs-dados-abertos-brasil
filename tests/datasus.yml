@@ -1,0 +1,8 @@
+# [out:json][timeout:25];
+# {{geocodeArea:Rio Grande do Sul}}->.searchArea;
+# (
+#   nwr["ref:CNES"](area.searchArea);
+# );
+# out body;
+# >;
+# out skel qt;

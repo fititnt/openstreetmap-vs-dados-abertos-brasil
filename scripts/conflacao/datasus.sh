@@ -152,3 +152,65 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
 # @see https://wiki.openstreetmap.org/wiki/Key:source
 # @see https://wiki.openstreetmap.org/wiki/Key:addr:place
 # @see https://wiki.openstreetmap.org/wiki/Key:phone
+
+
+### RS, v2 ____________________________________________________________________
+./scripts/csv2geojson.py \
+    --contain-and=CO_ESTADO_GESTOR=43 \
+    --lat=NU_LATITUDE \
+    --lon=NU_LONGITUDE \
+    --delimiter=';' \
+    --encoding='latin-1' \
+    --output-type=GeoJSON \
+    --cast-integer='CO_CNES|CO_UNIDADE' \
+    --column-copy-to='NU_CNPJ|ref:vatin' \
+    --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
+    --column-copy-to='CO_CNES|ref:CNES' \
+    --column-copy-to='CO_CEP|addr:postcode' \
+    --column-copy-to='NU_ENDERECO|addr:housenumber' \
+    --column-copy-to='NO_LOGRADOURO|addr:street' \
+    --column-copy-to='NO_EMAIL|contact:email' \
+    --column-copy-to='NU_TELEFONE|contact:phone' \
+    --column-copy-to='NU_FAX|contact:fax' \
+    --value-prepend='ref:vatin|BR' \
+    --value-prepend='operator:ref:vatin|BR' \
+    --value-postcode-br='addr:postcode' \
+    --value-phone-br='contact:phone|contact:fax' \
+    --value-fixed='source|BR:DATASUS' \
+    --ignore-warnings \
+    data/tmp/DATASUS-tbEstabelecimento.csv \
+    >data/tmp/DATASUS-tbEstabelecimento_RS_v2-2023-04-12.geojson
+
+# CO_ATIVIDADE=04 (HOSPITAL GERAL?)
+./scripts/csv2geojson.py \
+    --contain-and=CO_ESTADO_GESTOR=43 \
+    --contain-and=CO_ATIVIDADE_PRINCIPAL=009 \
+    --lat=NU_LATITUDE \
+    --lon=NU_LONGITUDE \
+    --delimiter=';' \
+    --encoding='latin-1' \
+    --output-type=GeoJSON \
+    --cast-integer='CO_CNES|CO_UNIDADE' \
+    --column-copy-to='NU_CNPJ|ref:vatin' \
+    --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
+    --column-copy-to='CO_CNES|ref:CNES' \
+    --column-copy-to='CO_CEP|addr:postcode' \
+    --column-copy-to='NU_ENDERECO|addr:housenumber' \
+    --column-copy-to='NO_LOGRADOURO|addr:street' \
+    --column-copy-to='NO_EMAIL|contact:email' \
+    --column-copy-to='NU_TELEFONE|contact:phone' \
+    --column-copy-to='NU_FAX|contact:fax' \
+    --value-prepend='ref:vatin|BR' \
+    --value-prepend='operator:ref:vatin|BR' \
+    --value-postcode-br='addr:postcode' \
+    --value-phone-br='contact:phone|contact:fax' \
+    --value-fixed='source|BR:DATASUS' \
+    --ignore-warnings \
+    data/tmp/DATASUS-tbEstabelecimento.csv \
+    >data/tmp/DATASUS-tbEstabelecimento_RS_v2+atvp009-2023-04-12.geojson
+
+## Alguem ja fez import parcial?
+# https://wiki.openstreetmap.org/wiki/Import_of_the_Brazilian_National_Register_of_Health_Facilities
+
+## URL
+# https://cnes2.datasus.gov.br/cabecalho_reduzido.asp?VCod_Unidade=
