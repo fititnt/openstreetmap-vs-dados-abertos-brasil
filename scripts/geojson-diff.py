@@ -21,10 +21,11 @@
 #       COMPANY:  EticaAI
 #       LICENSE:  Public Domain dedication or Zero-Clause BSD
 #                 SPDX-License-Identifier: Unlicense OR 0BSD
-#       VERSION:  v0.5.0
+#       VERSION:  v0.6.0
 #       CREATED:  2023-04-16 22:36 BRT
 #      REVISION:  2023-04-17 02:32 BRT v0.4.0 accept Overpas GeoJSON flavor
 #                 2023-04-18 00:25 BRT v0.5.0 supports Polygon (not just Point)
+#                 2023-04-19 21:52 BRT v0.6.0 draft of diff GeoJSON and JOSM
 # ==============================================================================
 
 import argparse
@@ -40,7 +41,7 @@ from shapely.geometry import Polygon
 from xml.sax.saxutils import escape
 
 
-__VERSION__ = "0.5.0"
+__VERSION__ = "0.6.0"
 
 PROGRAM = "geojson-diff"
 DESCRIPTION = """
@@ -62,8 +63,11 @@ __EPILOGUM__ = """
 ------------------------------------------------------------------------------
                             EXEMPLŌRUM GRATIĀ
 ------------------------------------------------------------------------------
-    {0} --output-diff=data/tmp/diff-points-ab.geojson \
+    {0} --output-diff-geojson=data/tmp/diff-points-ab.geojson \
+--output-diff-tsv=data/tmp/diff-points-ab.tsv \
+--output-diff-csv=data/tmp/diff-points-ab.csv \
 --output-log=data/tmp/diff-points-ab.log.txt \
+--tolerate-distance=1000 \
 tests/data/data-points_a.geojson \
 tests/data/data-points_b.geojson
 
@@ -359,16 +363,32 @@ class GeojsonCompare:
         # for item in self.a.items:
 
         if len(self.a.items) > 0:
-            if "id" in self.a.items[0][1] and self.a.items[0][1]["id"].startswith(
-                ("node/", "way/", "relation/")
-            ):
-                self.a_is_osm = True
+            for index in range(0, len(self.a.items)):
+                if not self.a.items[index][1]:
+                    continue
+
+                if "id" in self.a.items[index][1] and self.a.items[index][1][
+                    "id"
+                ].startswith(("node/", "way/", "relation/")):
+                    self.a_is_osm = True
+                    break
 
         if len(self.b.items) > 0:
-            if "id" in self.b.items[0][1] and self.b.items[0][1]["id"].startswith(
-                ("node/", "way/", "relation/")
-            ):
-                self.b_is_osm = True
+            for index in range(0, len(self.a.items)):
+                if not self.b.items[index][1]:
+                    continue
+
+                if "id" in self.b.items[index][1] and self.b.items[index][1][
+                    "id"
+                ].startswith(("node/", "way/", "relation/")):
+                    self.b_is_osm = True
+                    break
+
+        # if len(self.b.items) > 0:
+        #     if "id" in self.b.items[0][1] and self.b.items[0][1]["id"].startswith(
+        #         ("node/", "way/", "relation/")
+        #     ):
+        #         self.b_is_osm = True
 
         # print(self.a_is_osm, self.b_is_osm)
 
