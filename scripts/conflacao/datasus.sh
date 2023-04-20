@@ -89,7 +89,6 @@ ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEs
     data/tmp/DATASUS-tbEstabelecimento.csv \
     >data/tmp/DATASUS-tbEstabelecimento_SC_v2-2023-04-12.geojson
 
-
 # --contain-and=CO_MUNICIPIO_GESTOR=4217006 \
 ./scripts/csv2geojson.py \
     --contain-and=CO_CEP=88730000 \
@@ -153,7 +152,6 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
 # @see https://wiki.openstreetmap.org/wiki/Key:addr:place
 # @see https://wiki.openstreetmap.org/wiki/Key:phone
 
-
 ### RS, v2 ____________________________________________________________________
 ./scripts/csv2geojson.py \
     --contain-and=CO_ESTADO_GESTOR=43 \
@@ -181,16 +179,17 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
     data/tmp/DATASUS-tbEstabelecimento.csv \
     >data/tmp/DATASUS-tbEstabelecimento_RS_v2-2023-04-12.geojson
 
-# CO_ATIVIDADE=04 (HOSPITAL GERAL?)
 ./scripts/csv2geojson.py \
     --contain-and=CO_ESTADO_GESTOR=43 \
-    --contain-and=CO_ATIVIDADE_PRINCIPAL=009 \
+    --contain-and=TP_ESTAB_SEMPRE_ABERTO=S \
     --lat=NU_LATITUDE \
     --lon=NU_LONGITUDE \
     --delimiter=';' \
     --encoding='latin-1' \
     --output-type=GeoJSON \
     --cast-integer='CO_CNES|CO_UNIDADE' \
+    --column-copy-to='NO_FANTASIA|name' \
+    --column-copy-to='NO_RAZAO_SOCIAL|official_name' \
     --column-copy-to='NU_CNPJ|ref:vatin' \
     --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
     --column-copy-to='CO_CNES|ref:CNES' \
@@ -207,7 +206,41 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
     --value-fixed='source|BR:DATASUS' \
     --ignore-warnings \
     data/tmp/DATASUS-tbEstabelecimento.csv \
-    >data/tmp/DATASUS-tbEstabelecimento_RS_v2+atvp009-2023-04-12.geojson
+    >data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson
+
+# ./scripts/csv2geojson.py \
+#     --contain-and=CO_ESTADO_GESTOR=43 \
+#     --contain-and=TP_ESTAB_SEMPRE_ABERTO=S \
+#     --contain-and=CO_REGIAO_SAUDE='0008' \
+#     --lat=NU_LATITUDE \
+#     --lon=NU_LONGITUDE \
+#     --delimiter=';' \
+#     --encoding='latin-1' \
+#     --output-type=GeoJSON \
+#     --cast-integer='CO_CNES|CO_UNIDADE' \
+#     --column-copy-to='NU_CNPJ|ref:vatin' \
+#     --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
+#     --column-copy-to='CO_CNES|ref:CNES' \
+#     --column-copy-to='CO_CEP|addr:postcode' \
+#     --column-copy-to='NU_ENDERECO|addr:housenumber' \
+#     --column-copy-to='NO_LOGRADOURO|addr:street' \
+#     --column-copy-to='NO_EMAIL|contact:email' \
+#     --column-copy-to='NU_TELEFONE|contact:phone' \
+#     --column-copy-to='NU_FAX|contact:fax' \
+#     --value-prepend='ref:vatin|BR' \
+#     --value-prepend='operator:ref:vatin|BR' \
+#     --value-postcode-br='addr:postcode' \
+#     --value-phone-br='contact:phone|contact:fax' \
+#     --value-fixed='source|BR:DATASUS' \
+#     --ignore-warnings \
+#     data/tmp/DATASUS-tbEstabelecimento.csv \
+#     >data/tmp/DATASUS-tbEstabelecimento_RS_v3+S+reg008_2023-04-12.geojson
+
+# Regioes de saude
+# http://189.28.128.100/dab/docs/portaldab/documentos/regioes_saude_cuida_mais_brasil.pdf
+# https://www.cosemsrs.org.br/regioes-de-saude
+# RS 43008 Região 08 - Vale do Caí e Metropolitana
+# CO_REGIAO_SAUDE=008
 
 ## Alguem ja fez import parcial?
 # https://wiki.openstreetmap.org/wiki/Import_of_the_Brazilian_National_Register_of_Health_Facilities

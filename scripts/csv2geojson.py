@@ -19,9 +19,9 @@
 #       COMPANY:  EticaAI
 #       LICENSE:  Public Domain dedication or Zero-Clause BSD
 #                 SPDX-License-Identifier: Unlicense OR 0BSD
-#       VERSION:  v1.0.0
+#       VERSION:  v1.1.0
 #       CREATED:  2023-04-11 18:13 BRT
-#      REVISION:  ---
+#      REVISION:  2023*04-20 01:20 BRT v1.1 --contain-and-in
 # ==============================================================================
 
 
@@ -166,6 +166,17 @@ class Cli:
         )
 
         parser.add_argument(
+            "--contain-and-in",
+            help="Alternative to -contain-and where values for a "
+            "single field are a list. Separe values with ||"
+            "Accept multiple values."
+            "--contain-and=tag_a=valuea1||valuea2||valuea3",
+            dest="contain_and_in",
+            nargs="?",
+            action="append",
+        )
+
+        parser.add_argument(
             "--delimiter",
             help="the type of delimiter",
             dest="delimiter",
@@ -297,6 +308,7 @@ class Cli:
 
         _contain_or = {}
         _contain_and = {}
+        _contain_and_in = {}
         if pyargs.contain_or:
             for item in pyargs.contain_or:
                 if item:
@@ -315,6 +327,17 @@ class Cli:
                     else:
                         _contain_and[_key] = True
 
+        if pyargs.contain_and_in:
+            for item in pyargs.contain_and_in:
+                if item:
+                    if item.find("="):
+                        _key, _val = item.split("=")
+                        _val = _val.strip("|").strip()
+                        _val_items = _val.split("||")
+                        _contain_and_in[_key] = _val_items
+                    else:
+                        raise SyntaxError("contain-and-in requires at least one value")
+
         with open(pyargs.input, "r", encoding=pyargs.encoding) if len(
             pyargs.input
         ) > 1 else sys.stdin as csvfile:
@@ -330,7 +353,12 @@ class Cli:
             for row in reader:
                 line_num += 1
 
-                if not geojson_item_contain(row, contain_or=_contain_or, contain_and=_contain_and):
+                if not geojson_item_contain(
+                    row,
+                    contain_or=_contain_or,
+                    contain_and=_contain_and,
+                    contain_and_in=_contain_and_in,
+                ):
                     continue
 
                 formated_row = row_item_cast(
@@ -363,6 +391,7 @@ class Cli:
                     pyargs.lon,
                     contain_or=_contain_or,
                     contain_and=_contain_and,
+                    contain_and_in=_contain_and_in,
                     ignore_warnings=pyargs.ignore_warnings,
                 )
                 if not item:
@@ -391,12 +420,18 @@ def geojson_item(
     lon,
     contain_or: list = None,
     contain_and: list = None,
+    contain_and_in: list = None,
     ignore_warnings: bool = False,
 ):
     _lat = row[lat] if lat in row and len(row[lat].strip()) else False
     _lon = row[lon] if lon in row and len(row[lon].strip()) else False
 
-    if not geojson_item_contain(row, contain_or=contain_or, contain_and=contain_and):
+    if not geojson_item_contain(
+        row,
+        contain_or=contain_or,
+        contain_and=contain_and,
+        contain_and_in=contain_and_in,
+    ):
         return False
 
     if not _lat or not _lon:
@@ -428,12 +463,12 @@ def geojson_item(
 
 
 def geojson_item_contain(
-    item, contain_or: list = None, contain_and: list = None
+    item, contain_or: list = None, contain_and: list = None, contain_and_in: list = None
 ) -> bool:
     if not item:
         return False
 
-    if not contain_or and not contain_and:
+    if not contain_or and not contain_and and not contain_and_in:
         return True
 
     if contain_and:
@@ -445,6 +480,21 @@ def geojson_item_contain(
                 # return False
 
             if _val is not True and _val != item[_key]:
+                return False
+            _count -= 1
+
+        if _count > 0:
+            return False
+
+    if contain_and_in:
+        _count = len(contain_and_in.keys())
+
+        for _key, _val in contain_and_in.items():
+            if _key not in item:
+                raise SyntaxError(f"key {_key} not in {item}")
+                # return False
+
+            if item[_key] not in _val:
                 return False
             _count -= 1
 
