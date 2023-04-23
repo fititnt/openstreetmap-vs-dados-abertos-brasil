@@ -208,6 +208,34 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   data/tmp/DATASUS-tbEstabelecimento.csv \
   >data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson
 
+./scripts/csv2geojson.py \
+  --contain-and=CO_ESTADO_GESTOR=43 \
+  --lat=NU_LATITUDE \
+  --lon=NU_LONGITUDE \
+  --delimiter=';' \
+  --encoding='latin-1' \
+  --output-type=GeoJSON \
+  --cast-integer='CO_CNES|CO_UNIDADE' \
+  --column-copy-to='NO_FANTASIA|name' \
+  --column-copy-to='NO_RAZAO_SOCIAL|official_name' \
+  --column-copy-to='NU_CNPJ|ref:vatin' \
+  --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
+  --column-copy-to='CO_CNES|ref:CNES' \
+  --column-copy-to='CO_CEP|addr:postcode' \
+  --column-copy-to='NU_ENDERECO|addr:housenumber' \
+  --column-copy-to='NO_LOGRADOURO|addr:street' \
+  --column-copy-to='NO_EMAIL|contact:email' \
+  --column-copy-to='NU_TELEFONE|contact:phone' \
+  --column-copy-to='NU_FAX|contact:fax' \
+  --value-prepend='ref:vatin|BR' \
+  --value-prepend='operator:ref:vatin|BR' \
+  --value-postcode-br='addr:postcode' \
+  --value-phone-br='contact:phone|contact:fax' \
+  --value-fixed='source|BR:DATASUS' \
+  --ignore-warnings \
+  data/tmp/DATASUS-tbEstabelecimento.csv \
+  >data/tmp/DATASUS-tbEstabelecimento_RS_v5_2023-04-12.geojson
+
 # ./scripts/csv2geojson.py \
 #     --contain-and=CO_ESTADO_GESTOR=43 \
 #     --contain-and=TP_ESTAB_SEMPRE_ABERTO=S \
@@ -266,7 +294,6 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
 # >;
 # out skel qt;
 
-
 ./scripts/geojson-diff.py \
   --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
   --output-diff-csv=data/tmp/datasus_RS__sus-x-osm.diff.csv \
@@ -300,6 +327,27 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
   data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson
 
+./scripts/geojson-diff.py \
+  --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
+  --output-diff-csv=data/tmp/datasus_RS__sus-x-osm.diff.csv \
+  --pivot-key-main='CO_CNES||ref:CNES' --pivot-key-main='ref:vatin' \
+  --tolerate-distance=1000 \
+  --filter-ab-dist-min=0 \
+  --prefilter-a-contain='NO_RAZAO_SOCIAL||hospital' \
+  --prefilter-b-contain='name||hospital' \
+  data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
+  data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson
+
+./scripts/geojson-diff.py \
+  --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
+  --output-diff-csv=data/tmp/datasus_RS__sus-x-osm.diff.csv \
+  --pivot-key-main='CO_CNES||ref:CNES' --pivot-key-main='ref:vatin' \
+  --tolerate-distance=1000 \
+  --filter-ab-dist-min=0 \
+  --prefilter-a-contain='NO_RAZAO_SOCIAL||hospital' \
+  --prefilter-b-contain='name||hospital' \
+  data/tmp/DATASUS-tbEstabelecimento_RS_v5_2023-04-12.geojson \
+  data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson
 
 ./scripts/csv2excel.py \
   data/tmp/datasus_RS__sus-x-osm.diff.csv \

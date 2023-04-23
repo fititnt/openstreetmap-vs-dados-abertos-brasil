@@ -194,20 +194,31 @@ class Cli:
             action="append",
         )
 
-        # prefilter = parser.add_argument_group("Pre-filter data before processing")
+        prefilter = parser.add_argument_group("Pre-filter data before processing")
 
-        # prefilter.add_argument(
-        #     "--prefilter-a-contain",
-        #     help="If defined, its an strong hint that item from A and B "
-        #     "alredy are mached with each other. "
-        #     "Use '||' if attribute on A is not the same on the B. "
-        #     "Accept multiple values. "
-        #     "Example: "
-        #     "--prefilter-a-contain='NO_RAZAO_SOCIAL||hospital'",
-        #     dest="prefilter",
-        #     nargs="?",
-        #     action="append",
-        # )
+        prefilter.add_argument(
+            "--prefilter-a-contain",
+            help="Prefilter (e.g. before processing) a filed in A for a string"
+            "Use '||' to divide the field and the string. "
+            "Accept multiple values. "
+            "Example: "
+            "--prefilter-a-contain='NO_RAZAO_SOCIAL||hospital'",
+            dest="prefilter_a_contain",
+            nargs="?",
+            action="append",
+        )
+
+        prefilter.add_argument(
+            "--prefilter-b-contain",
+            help="Prefilter (e.g. before processing) a filed in B for a string"
+            "Use '||' to divide the field and the string. "
+            "Accept multiple values. "
+            "Example: "
+            "--prefilter-a-contain='name||hospital'",
+            dest="prefilter_b_contain",
+            nargs="?",
+            action="append",
+        )
 
         filters = parser.add_argument_group(
             "Quick output filters for GeoJSON output. Ignored by tabular diffs"
@@ -280,9 +291,18 @@ class Cli:
             filter_ab_dist_min=pyargs.filter_ab_dist_min,
             filter_ab_dist_max=pyargs.filter_ab_dist_max,
         )
+        cprefilters = ConflationPrefilters(
+            prefilter_a_contain=parse_argument_values(pyargs.prefilter_a_contain),
+            prefilter_b_contain=parse_argument_values(pyargs.prefilter_b_contain),
+        )
 
         geodiff = GeojsonCompare(
-            pyargs.geodataset_a, pyargs.geodataset_b, crules, cfilters, logger
+            pyargs.geodataset_a,
+            pyargs.geodataset_b,
+            crules,
+            cprefilters=cprefilters,
+            cfilters=cfilters,
+            logger=logger,
         )
 
         if pyargs.outosc:
@@ -338,6 +358,55 @@ class ConflationFilters:
         return True
 
 
+class ConflationPrefilters:
+    def __init__(
+        self, prefilter_a_contain: dict = None, prefilter_b_contain: dict = None
+    ) -> None:
+        self.prefilter_a_contain = prefilter_a_contain
+        self.prefilter_b_contain = prefilter_b_contain
+
+    def _allow_x_contain(self, item: dict, rule_contain: dict = None):
+        # if not self.prefilter_a_contain:
+        if not rule_contain:
+            return True
+        elif not item:
+            # We assume that if any condition exist to mach, missing
+            # tags would fail. However this may not be always the case
+            return False
+
+        # count_tries = len(self.prefilter_a_contain.keys)
+        okay = None
+        # for key, val in self.prefilter_a_contain.items():
+        for key, val in rule_contain.items():
+            if key not in item:
+                continue
+            if key in item and val == True:
+                okay = True
+                continue
+            if not isinstance(val, list):
+                val = [val]
+
+            _item_term = str(item[key]).lower()
+
+            for alt in val:
+                if _item_term.find(alt) > -1:
+                    okay = True
+
+        # TODO do some extra attempt here
+        if not okay:
+            return False
+        else:
+            return True
+
+        # return True
+
+    def allow_a(self, item: dict):
+        return self._allow_x_contain(item, self.prefilter_a_contain)
+
+    def allow_b(self, item: dict):
+        return self._allow_x_contain(item, self.prefilter_b_contain)
+
+
 class ConflationRules:
     def __init__(
         self,
@@ -351,9 +420,14 @@ class ConflationRules:
 
 
 class DatasetInMemory:
-    def __init__(self, alias: str) -> None:
+    def __init__(
+        self, alias: str, group: str, cprefilters: Type["ConflationPrefilters"]
+    ) -> None:
         self.alias = alias
+        self.group = group
         self.index = -1
+        self.cprefilters = cprefilters
+        # self.is_a = is_a
 
         # Tuple
         # (coords, props, geometry?)
@@ -370,9 +444,19 @@ class DatasetInMemory:
             or "coordinates" not in item["geometry"]
             or "type" not in item
         ):
-            # Really bad input item
+            # Really bad input item (we still count on index)
             self.items.append(False)
-        elif item["geometry"]["type"] != "Point":
+            return False
+
+        _properties = item["properties"] if "properties" in item else None
+
+        if (self.group == "A" and not self.cprefilters.allow_a(_properties)) or (
+            self.group == "B" and not self.cprefilters.allow_b(_properties)
+        ):
+            # On this case, we ignore the item
+            return False
+
+        if item["geometry"]["type"] != "Point":
             if item["geometry"]["type"] == "Polygon":
                 poly = Polygon(item["geometry"]["coordinates"][0])
 
@@ -428,16 +512,19 @@ class GeojsonCompare:
         geodataset_a: str,
         geodataset_b: str,
         crules: Type["ConflationRules"],
+        cprefilters: Type["ConflationPrefilters"],
         cfilters: Type["ConflationFilters"],
         logger,
     ) -> None:
         self.distance_okay = crules.distance_okay
-        self.a = self._load_geojson(geodataset_a, "A")
-        self.b = self._load_geojson(geodataset_b, "B")
         self.crules = crules
         self.cfilters = cfilters
+        self.cprefilters = cprefilters
         self.a_is_osm = None
         self.b_is_osm = None
+
+        self.a = self._load_geojson(geodataset_a, "A", "A")
+        self.b = self._load_geojson(geodataset_b, "B", "B")
         self.matrix = []
 
         self.compute()
@@ -445,7 +532,7 @@ class GeojsonCompare:
         # logger.info(self.summary())
         # pass
 
-    def _load_geojson(self, path: str, alias: str) -> DatasetInMemory:
+    def _load_geojson(self, path: str, alias: str, group: str) -> DatasetInMemory:
         """Load optimized version of GeoJSON++ into memory
 
         Args:
@@ -455,7 +542,8 @@ class GeojsonCompare:
         Returns:
             DatasetInMemory
         """
-        data = DatasetInMemory(alias)
+        # print(self.__dict__)
+        data = DatasetInMemory(alias, group, self.cprefilters)
 
         with open(path, "r") as file:
             # TODO optimize geojsonl
