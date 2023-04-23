@@ -787,7 +787,7 @@ class GeojsonCompare:
             match_stage = ""
 
             # if not _matrix or not "id" in _matrix[1] else _item_a[1]["id"]
-            distance_ab = -1 if not _matrix else _matrix[2]
+            distance_ab = -1 if not _matrix else round(_matrix[2], 2)
             latitude_a = "" if not _item_a else _item_a[0][1]
             longitude_a = "" if not _item_a else _item_a[0][0]
             latitude_b = "" if not _matrix else self.b.items[_matrix[0]][0][1]

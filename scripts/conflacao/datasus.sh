@@ -299,3 +299,8 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --filter-ab-dist-min=0 \
   data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
   data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson
+
+
+./scripts/csv2excel.py \
+  data/tmp/datasus_RS__sus-x-osm.diff.csv \
+  data/tmp/datasus_RS__sus-x-osm.diff.xlsx
