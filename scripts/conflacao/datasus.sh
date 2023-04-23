@@ -269,6 +269,7 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
 ./scripts/geojson-diff.py \
   --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
   --output-diff-csv=data/tmp/datasus_RS__sus-x-osm.diff.csv \
-  --tolerate-distance=100 \
+  --pivot-key-main='CO_CNES||ref:CNES' --pivot-key-main='ref:vatin' \
+  --tolerate-distance=1000 \
   data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
   data/tmp/osm-healtcare_RS_2023-04-20.geojson

@@ -360,6 +360,7 @@ class GeojsonCompare:
         self.distance_okay = crules.distance_okay
         self.a = self._load_geojson(geodataset_a, "A")
         self.b = self._load_geojson(geodataset_b, "B")
+        self.crules = crules
         self.a_is_osm = None
         self.b_is_osm = None
         self.matrix = []
@@ -492,20 +493,24 @@ class GeojsonCompare:
                         # break
 
             if found == True and len(candidates) > 0:
-                # pass
-                candidates_sorted = sorted(candidates, key=lambda tup: tup[0])
 
-                dist = candidates_sorted[0][0]
-                index_b = candidates_sorted[0][1]
-                skiped = None
-                if len(candidates) > 1:
-                    skiped = []
-                    # for i in range(1, len(candidates)):
-                    for i in range(0, len(candidates)):
-                        skiped.append(f"B{candidates[i][1]}")
+                it = ItemMatcher(self.a.items[index_a], candidates, self.crules)
+                self.matrix.append(it.result())
 
-                # self.matrix.append((index_b, MATCH_NEAR, round(dist, 2)))
-                self.matrix.append((index_b, MATCH_NEAR, dist, skiped))
+                # # pass
+                # candidates_sorted = sorted(candidates, key=lambda tup: tup[0])
+
+                # dist = candidates_sorted[0][0]
+                # index_b = candidates_sorted[0][1]
+                # skiped = None
+                # if len(candidates) > 1:
+                #     skiped = []
+                #     # for i in range(1, len(candidates)):
+                #     for i in range(0, len(candidates)):
+                #         skiped.append(f"B{candidates[i][1]}")
+
+                # # self.matrix.append((index_b, MATCH_NEAR, round(dist, 2)))
+                # self.matrix.append((index_b, MATCH_NEAR, dist, skiped))
 
             if not found:
                 self.matrix.append(None)
@@ -768,8 +773,48 @@ class GeojsonCompare:
 class ItemMatcher:
     def __init__(self, item, candidates: list, crules: Type[ConflationRules]) -> None:
         self.item = item
-        self.candidates = candidates
+        # self.candidates = candidates
+        ## Improve this part
+        self.candidates_valid = None
+        self.automacher = None
         self.crules = crules
+
+        self.compute(candidates)
+
+    def compute(self, candidates):
+        # candidates = self.candidates
+
+        candidates_sorted = sorted(candidates, key=lambda tup: tup[0])
+
+        # Improve this part
+        self.candidates_valid = candidates_sorted
+
+        dist = candidates_sorted[0][0]
+        index_b = candidates_sorted[0][1]
+        skiped = None
+        if len(candidates) > 1:
+            skiped = []
+            # for i in range(1, len(candidates)):
+            for i in range(0, len(candidates)):
+                skiped.append(f"B{candidates[i][1]}")
+
+        # self.matrix.append((index_b, MATCH_NEAR, round(dist, 2)))
+        # self.matrix.append((index_b, MATCH_NEAR, dist, skiped))
+        # return (index_b, MATCH_NEAR, dist, skiped)
+
+        self.automacher = (index_b, MATCH_NEAR, dist, skiped)
+
+    def result(self):
+        if not self.candidates_valid or len(self.candidates_valid) == 0:
+            return None
+        if len(self.candidates_valid) == 0:
+            return None
+
+        # @TODO order this part better
+        # return self.candidates_valid[0]
+        if self.automacher:
+            return self.automacher
+        return None
 
 
 def parse_argument_values(arguments: list, delimiter: str = "||") -> dict:
@@ -778,7 +823,7 @@ def parse_argument_values(arguments: list, delimiter: str = "||") -> dict:
 
     result = {}
     for item in arguments:
-        if item.find(delimiter):
+        if item.find(delimiter) > -1:
             _key, _val = item.split(delimiter)
             result[_key] = _val
         else:
