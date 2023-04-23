@@ -194,6 +194,21 @@ class Cli:
             action="append",
         )
 
+        # prefilter = parser.add_argument_group("Pre-filter data before processing")
+
+        # prefilter.add_argument(
+        #     "--prefilter-a-contain",
+        #     help="If defined, its an strong hint that item from A and B "
+        #     "alredy are mached with each other. "
+        #     "Use '||' if attribute on A is not the same on the B. "
+        #     "Accept multiple values. "
+        #     "Example: "
+        #     "--prefilter-a-contain='NO_RAZAO_SOCIAL||hospital'",
+        #     dest="prefilter",
+        #     nargs="?",
+        #     action="append",
+        # )
+
         filters = parser.add_argument_group(
             "Quick output filters for GeoJSON output. Ignored by tabular diffs"
         )
@@ -480,10 +495,19 @@ class GeojsonCompare:
                 if not self.a.items[index] or not self.a.items[index][1]:
                     continue
 
-                if "id" in self.a.items[index][1] and self.a.items[index][1][
-                    "id"
-                ].startswith(("node/", "way/", "relation/")):
+                if (
+                    "id" in self.a.items[index][1]
+                    and self.a.items[index][1]["id"].startswith(
+                        ("node/", "way/", "relation/")
+                    )
+                ) or (
+                    "@id" in self.a.items[index][1]
+                    and self.a.items[index][1]["@id"].startswith(
+                        ("node/", "way/", "relation/")
+                    )
+                ):
                     self.a_is_osm = True
+                    # print('a_is_osm')
                     break
 
         if len(self.b.items) > 0:
@@ -492,10 +516,19 @@ class GeojsonCompare:
                 if not self.b.items[index] or not self.b.items[index][1]:
                     continue
 
-                if "id" in self.b.items[index][1] and self.b.items[index][1][
-                    "id"
-                ].startswith(("node/", "way/", "relation/")):
+                if (
+                    "id" in self.b.items[index][1]
+                    and self.b.items[index][1]["id"].startswith(
+                        ("node/", "way/", "relation/")
+                    )
+                ) or (
+                    "@id" in self.b.items[index][1]
+                    and self.b.items[index][1]["@id"].startswith(
+                        ("node/", "way/", "relation/")
+                    )
+                ):
                     self.b_is_osm = True
+                    # print('b_is_osm')
                     break
 
         # if len(self.b.items) > 0:
@@ -772,16 +805,24 @@ class GeojsonCompare:
             uid_a = f"A{index_a}"
             uid_b = "" if not _matrix else f"B{_matrix[0]}"
             # id_a = "" if not "id" in _item_a else _item_a["id"]
-            id_a = "" if not _item_a[1] or not "id" in _item_a[1] else _item_a[1]["id"]
+            id_a = (
+                "" if not _item_a[1] or not "@id" in _item_a[1] else _item_a[1]["@id"]
+            )
+            if id_a == "" and _item_a[1] and "id" in _item_a[1]:
+                id_a = _item_a[1]["id"]
+
             id_b = ""
             # if _matrix and self.b.items[_matrix[0]]:
             if (
                 _matrix
                 and self.b.items[_matrix[0]][1]
-                and "id" in self.b.items[_matrix[0]][1]
+                # and "id" in self.b.items[_matrix[0]][1]
             ):
                 # print(self.b.items[_matrix[0]][1])
-                id_b = self.b.items[_matrix[0]][1]["id"]
+                if "@id" in self.b.items[_matrix[0]][1]:
+                    id_b = self.b.items[_matrix[0]][1]["@id"]
+                if "id" in self.b.items[_matrix[0]][1]:
+                    id_b = self.b.items[_matrix[0]][1]["id"]
                 # pass
 
             match_stage = ""
