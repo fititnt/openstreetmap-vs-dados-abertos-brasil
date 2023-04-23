@@ -266,6 +266,7 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
 # >;
 # out skel qt;
 
+
 ./scripts/geojson-diff.py \
   --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
   --output-diff-csv=data/tmp/datasus_RS__sus-x-osm.diff.csv \
@@ -273,3 +274,28 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --tolerate-distance=1000 \
   data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
   data/tmp/osm-healtcare_RS_2023-04-20.geojson
+
+## data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson
+# [out:json][timeout:25];
+# {{geocodeArea:Rio Grande do Sul}}->.searchArea;
+# (
+#   nwr["ref:CNES"](area.searchArea);
+#   nwr["healthcare"="hospital"](area.searchArea);
+#   nwr["amenity"="hospital"](area.searchArea);
+#   //nwr["amenity"="clinic"](area.searchArea);
+#   //nwr["amenity"="social_facility"](area.searchArea);
+#   //nwr["amenity"="pharmacy"](area.searchArea);
+#   //nwr["amenity"="doctors"](area.searchArea);
+# );
+# out body;
+# >;
+# out skel qt;
+
+./scripts/geojson-diff.py \
+  --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
+  --output-diff-csv=data/tmp/datasus_RS__sus-x-osm.diff.csv \
+  --pivot-key-main='CO_CNES||ref:CNES' --pivot-key-main='ref:vatin' \
+  --tolerate-distance=1000 \
+  --filter-ab-dist-min=0 \
+  data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
+  data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson

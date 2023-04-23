@@ -155,7 +155,7 @@ class Cli:
         )
 
         pivot = parser.add_argument_group(
-            "Parameters used to know how to conflate A and B "
+            "Parameters used to know how to conflate A and B"
         )
 
         pivot.add_argument(
@@ -192,6 +192,28 @@ class Cli:
             dest="pivot_attr_2",
             nargs="?",
             action="append",
+        )
+
+        filters = parser.add_argument_group(
+            "Quick output filters for GeoJSON output. Ignored by tabular diffs"
+        )
+
+        filters.add_argument(
+            "--filter-ab-dist-min",
+            help="Minimal distance between A and B. Example: 0",
+            dest="filter_ab_dist_min",
+            default=None,
+            required=False,
+            nargs="?",
+        )
+
+        filters.add_argument(
+            "--filter-ab-dist-max",
+            help="Minimal distance between A and B. Example: 0",
+            dest="filter_ab_dist_max",
+            default=None,
+            required=False,
+            nargs="?",
         )
 
         advanced = parser.add_argument_group(
@@ -239,8 +261,13 @@ class Cli:
             pivot_attr_2=parse_argument_values(pyargs.pivot_attr_2),
         )
 
+        cfilters = ConflationFilters(
+            filter_ab_dist_min=pyargs.filter_ab_dist_min,
+            filter_ab_dist_max=pyargs.filter_ab_dist_max,
+        )
+
         geodiff = GeojsonCompare(
-            pyargs.geodataset_a, pyargs.geodataset_b, crules, logger
+            pyargs.geodataset_a, pyargs.geodataset_b, crules, cfilters, logger
         )
 
         if pyargs.outosc:
@@ -263,6 +290,37 @@ class Cli:
 
         # geodiff.debug()
         return self.EXIT_OK
+
+
+class ConflationFilters:
+    def __init__(
+        self, filter_ab_dist_min: int = None, filter_ab_dist_max: int = None
+    ) -> None:
+        if filter_ab_dist_min is not None:
+            self.filter_ab_dist_min = float(filter_ab_dist_min)
+        else:
+            self.filter_ab_dist_min = None
+        if filter_ab_dist_max is not None:
+            self.filter_ab_dist_max = float(filter_ab_dist_max)
+        else:
+            self.filter_ab_dist_max = None
+        # self.filter_ab_dist_max = filter_ab_dist_max
+
+    def dist_ab(self, item_dist=int):
+        if item_dist is None:
+            return False
+        if (
+            self.filter_ab_dist_min is not None
+            and not item_dist <= self.filter_ab_dist_min
+        ):
+            return False
+        if (
+            self.filter_ab_dist_max is not None
+            and not item_dist >= self.filter_ab_dist_max
+        ):
+            return False
+
+        return True
 
 
 class ConflationRules:
@@ -355,12 +413,14 @@ class GeojsonCompare:
         geodataset_a: str,
         geodataset_b: str,
         crules: Type["ConflationRules"],
+        cfilters: Type["ConflationFilters"],
         logger,
     ) -> None:
         self.distance_okay = crules.distance_okay
         self.a = self._load_geojson(geodataset_a, "A")
         self.b = self._load_geojson(geodataset_b, "B")
         self.crules = crules
+        self.cfilters = cfilters
         self.a_is_osm = None
         self.b_is_osm = None
         self.matrix = []
@@ -427,7 +487,7 @@ class GeojsonCompare:
                     break
 
         if len(self.b.items) > 0:
-            for index in range(0, len(self.a.items)):
+            for index in range(0, len(self.b.items)):
                 # print(self.b.items[index])
                 if not self.b.items[index] or not self.b.items[index][1]:
                     continue
@@ -493,7 +553,6 @@ class GeojsonCompare:
                         # break
 
             if found == True and len(candidates) > 0:
-
                 it = ItemMatcher(self.a.items[index_a], candidates, self.crules)
                 self.matrix.append(it.result())
 
@@ -561,6 +620,9 @@ class GeojsonCompare:
                     final_properties[f"a->b.near"] = " ".join(_matrix[3])
             else:
                 final_properties[f"a->b.distance"] = -1
+
+            if not self.cfilters.dist_ab(final_properties[f"a->b.distance"]):
+                continue
 
             # Colors inspired by
             # https://wiki.openstreetmap.org/wiki/OSM_Conflator
