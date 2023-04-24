@@ -232,6 +232,8 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --value-prepend='operator:ref:vatin|BR' \
   --value-postcode-br='addr:postcode' \
   --value-phone-br='contact:phone|contact:fax' \
+  --value-name-place-br='name|official_name|addr:suburb' \
+  --value-name-street-br='addr:street' \
   --value-fixed='source|BR:DATASUS' \
   --ignore-warnings \
   data/tmp/DATASUS-tbEstabelecimento.csv \

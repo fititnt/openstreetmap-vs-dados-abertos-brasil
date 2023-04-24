@@ -32,6 +32,7 @@ import csv
 import json
 import re
 import sys
+import string
 
 
 PROGRAM = "csv2geojson"
@@ -301,6 +302,25 @@ class Cli:
             default=None,
         )
 
+        cast_group.add_argument(
+            "--value-name-place-br",
+            help="One or more columsn to format as name of place (Locale BR)",
+            dest="value_name_place_br",
+            nargs="?",
+            type=lambda x: x.split("|"),
+            default=None,
+        )
+
+        cast_group.add_argument(
+            "--value-name-street-br",
+            help="One or more columsn to format as name of street "
+            "(Locale BR, 'logradouro') ",
+            dest="value_name_street_br",
+            nargs="?",
+            type=lambda x: x.split("|"),
+            default=None,
+        )
+
         return parser.parse_args()
 
     def execute_cli(self, pyargs, stdin=STDIN, stdout=sys.stdout, stderr=sys.stderr):
@@ -380,6 +400,8 @@ class Cli:
                     value_prepend=pyargs.value_prepend,
                     value_postcode_br=pyargs.value_postcode_br,
                     value_phone_br=pyargs.value_phone_br,
+                    value_name_place_br=pyargs.value_name_place_br,
+                    value_name_street_br=pyargs.value_name_street_br,
                     ignore_warnings=pyargs.ignore_warnings,
                 )
 
@@ -596,6 +618,8 @@ def row_item_values(
     value_prepend: list = None,
     value_postcode_br: list = None,
     value_phone_br: list = None,
+    value_name_place_br: list = None,
+    value_name_street_br: list = None,
     ignore_warnings: bool = False,
 ):
     # result = row
@@ -638,6 +662,22 @@ def row_item_values(
             else:
                 row[item] = ""
 
+    if isinstance(value_name_place_br, list) and len(value_name_place_br) > 0:
+        for item in value_name_place_br:
+            _value = _zzz_format_name_place_br(row[item])
+            if _value:
+                row[item] = _value
+            else:
+                row[item] = ""
+
+    if isinstance(value_name_street_br, list) and len(value_name_street_br) > 0:
+        for item in value_name_street_br:
+            _value = _zzz_format_name_street_br(row[item])
+            if _value:
+                row[item] = _value
+            else:
+                row[item] = ""
+
     return row
 
 
@@ -648,6 +688,31 @@ def _zzz_format_cep(value: str):
         if len(value) == 8:
             return re.sub(r"(\d{5})(\d{3})", r"\1-\2", value)
     return False
+
+
+def _zzz_format_name_place_br(value: str):
+    if not value or not isinstance(value, str):
+        return value
+
+    term = string.capwords(value.strip())
+    term2 = re.sub("\s\s+", " ", term)
+
+    # @TODO deal with Do Da De
+
+    return term2
+
+
+def _zzz_format_name_street_br(value: str):
+    if not value or not isinstance(value, str):
+        return value
+
+    term = string.capwords(value.strip())
+    term2 = re.sub("\s\s+", " ", term)
+
+    # @TODO deal with Do Da De
+    # @TODO deal with abbreviations
+
+    return term2
 
 
 def _zzz_format_phone_br(value: str):
