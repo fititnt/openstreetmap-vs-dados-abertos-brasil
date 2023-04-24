@@ -222,6 +222,7 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
   --column-copy-to='CO_CNES|ref:CNES' \
   --column-copy-to='CO_CEP|addr:postcode' \
+  --column-copy-to='NO_BAIRRO|addr:suburb' \
   --column-copy-to='NU_ENDERECO|addr:housenumber' \
   --column-copy-to='NO_LOGRADOURO|addr:street' \
   --column-copy-to='NO_EMAIL|contact:email' \
@@ -235,6 +236,9 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --ignore-warnings \
   data/tmp/DATASUS-tbEstabelecimento.csv \
   >data/tmp/DATASUS-tbEstabelecimento_RS_v5_2023-04-12.geojson
+
+# addr:city=Florianópolis
+# addr:suburb=Centro
 
 # ./scripts/csv2geojson.py \
 #     --contain-and=CO_ESTADO_GESTOR=43 \
@@ -346,9 +350,13 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --filter-ab-dist-min=0 \
   --prefilter-a-contain='NO_RAZAO_SOCIAL||hospital' \
   --prefilter-b-contain='name||hospital' \
+  --prefilter-b-contain='amenity||hospital' \
   data/tmp/DATASUS-tbEstabelecimento_RS_v5_2023-04-12.geojson \
   data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson
 
 ./scripts/csv2excel.py \
   data/tmp/datasus_RS__sus-x-osm.diff.csv \
   data/tmp/datasus_RS__sus-x-osm.diff.xlsx
+
+# @TODO extrair bairros, ex: addr:suburb=Centro
+# @TODO extrair cidade, ex: addr:city=Cândido Godói

@@ -346,12 +346,12 @@ class ConflationFilters:
             return False
         if (
             self.filter_ab_dist_min is not None
-            and not item_dist <= self.filter_ab_dist_min
+            and not item_dist >= self.filter_ab_dist_min
         ):
             return False
         if (
             self.filter_ab_dist_max is not None
-            and not item_dist >= self.filter_ab_dist_max
+            and not item_dist <= self.filter_ab_dist_max
         ):
             return False
 
@@ -710,6 +710,7 @@ class GeojsonCompare:
             _matrix = self.matrix[index_a]
 
             final_properties = {}
+            pointer = None
 
             # print("_item_a", _item_a)
             if _item_a[2] is not None:
@@ -723,16 +724,37 @@ class GeojsonCompare:
 
             if _item_a[1] is not None:
                 for key, value in _item_a[1].items():
-                    final_properties[f"a.{key}"] = value
+                    # final_properties[f"a.{key}"] = value
+                    final_properties[f"{key}"] = value
             # else:
             #     pass
 
-            if _matrix and self.b.items[_matrix[0]][1]:
-                # print('_matrix', _matrix)
-                for key, value in self.b.items[_matrix[0]][1].items():
-                    final_properties[f"b.{key}"] = value
-            # else:
-            #     pass
+            # if _matrix and self.b.items[_matrix[0]][1]:
+            #     # print('_matrix', _matrix)
+            #     _item_b = self.b.items[_matrix[0]]
+
+            #     pointer = {
+            #         "geometry": {
+            #             "type": "LineString",
+            #             "coordinates": [
+            #                 [_item_a[0][1], _item_a[0][0]],
+            #                 [_item_b[0][1], _item_b[0][0]],
+            #             ],
+            #         },
+            #         # "properties": final_properties,
+            #         "properties": _item_b[1],
+            #         "type": "Feature",
+            #         # "_debug": f"_item_a {_item_a}",
+            #         # "_original": _item_a,
+            #     }
+
+            #     # @TODO fix this
+            #     pointer = None
+
+            #     # for key, value in self.b.items[_matrix[0]][1].items():
+            #     #     final_properties[f"b.{key}"] = value
+            # # else:
+            # #     pass
 
             if _matrix:
                 # print("_matrix", _matrix)
@@ -770,6 +792,8 @@ class GeojsonCompare:
             }
 
             dataobj["features"].append(res)
+            if pointer:
+                dataobj["features"].append(pointer)
             # dataobj["features"].append(
             #     f"_item_a {_item_a}",
             # )
