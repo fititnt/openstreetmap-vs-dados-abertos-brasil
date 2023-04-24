@@ -767,21 +767,21 @@ class GeojsonCompare:
             if not self.cfilters.dist_ab(final_properties[f"a->b.distance"]):
                 continue
 
-            # Colors inspired by
-            # https://wiki.openstreetmap.org/wiki/OSM_Conflator
+            # # Colors inspired by
+            # # https://wiki.openstreetmap.org/wiki/OSM_Conflator
 
-            if final_properties[f"a->b.distance"] == -1:
-                # 'create': '#11dd11',  # creating a new node
-                final_properties["action"] = "create"
-                final_properties["marker-color"] = "#11dd11"
-            elif final_properties[f"a->b.distance"] == 0:
-                # 'retag':  '#660000',  # cannot delete unmatched feature, changing tags
-                final_properties["action"] = "retag"
-                final_properties["marker-color"] = "#660000"
-            else:
-                # 'move':   '#110055',  # moving an existing node
-                final_properties["action"] = "move"
-                final_properties["marker-color"] = "#110055"
+            # if final_properties[f"a->b.distance"] == -1:
+            #     # 'create': '#11dd11',  # creating a new node
+            #     final_properties["action"] = "create"
+            #     final_properties["marker-color"] = "#11dd11"
+            # elif final_properties[f"a->b.distance"] == 0:
+            #     # 'retag':  '#660000',  # cannot delete unmatched feature, changing tags
+            #     final_properties["action"] = "retag"
+            #     final_properties["marker-color"] = "#660000"
+            # else:
+            #     # 'move':   '#110055',  # moving an existing node
+            #     final_properties["action"] = "move"
+            #     final_properties["marker-color"] = "#110055"
 
             res = {
                 "geometry": final_geometry,

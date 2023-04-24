@@ -77,13 +77,13 @@ ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEs
   --column-copy-to='CO_CEP|addr:postcode' \
   --column-copy-to='NU_ENDERECO|addr:housenumber' \
   --column-copy-to='NO_LOGRADOURO|addr:street' \
-  --column-copy-to='NO_EMAIL|contact:email' \
-  --column-copy-to='NU_TELEFONE|contact:phone' \
-  --column-copy-to='NU_FAX|contact:fax' \
+  --column-copy-to='NO_EMAIL|email' \
+  --column-copy-to='NU_TELEFONE|phone' \
+  --column-copy-to='NU_FAX|fax' \
   --value-prepend='ref:vatin|BR' \
   --value-prepend='operator:ref:vatin|BR' \
   --value-postcode-br='addr:postcode' \
-  --value-phone-br='contact:phone|contact:fax' \
+  --value-phone-br='phone|fax' \
   --value-fixed='source|BR:DATASUS' \
   --ignore-warnings \
   data/tmp/DATASUS-tbEstabelecimento.csv \
@@ -104,13 +104,13 @@ ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEs
   --column-copy-to='CO_CEP|addr:postcode' \
   --column-copy-to='NU_ENDERECO|addr:housenumber' \
   --column-copy-to='NO_LOGRADOURO|addr:street' \
-  --column-copy-to='NO_EMAIL|contact:email' \
-  --column-copy-to='NU_TELEFONE|contact:phone' \
-  --column-copy-to='NU_FAX|contact:fax' \
+  --column-copy-to='NO_EMAIL|email' \
+  --column-copy-to='NU_TELEFONE|phone' \
+  --column-copy-to='NU_FAX|fax' \
   --value-prepend='ref:vatin|BR' \
   --value-prepend='operator:ref:vatin|BR' \
   --value-postcode-br='addr:postcode' \
-  --value-phone-br='contact:phone|contact:fax' \
+  --value-phone-br='phone|fax' \
   --value-fixed='source|BR:DATASUS' \
   --ignore-warnings \
   data/tmp/DATASUS-tbEstabelecimento.csv \
@@ -137,12 +137,12 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --column-copy-to='CO_CEP|addr:postcode' \
   --column-copy-to='NU_ENDERECO|addr:housenumber' \
   --column-copy-to='NO_LOGRADOURO|addr:street' \
-  --column-copy-to='NO_EMAIL|contact:email' \
-  --column-copy-to='NU_TELEFONE|contact:phone' \
-  --column-copy-to='NU_FAX|contact:fax' \
+  --column-copy-to='NO_EMAIL|email' \
+  --column-copy-to='NU_TELEFONE|phone' \
+  --column-copy-to='NU_FAX|fax' \
   --value-prepend='operator:ref:vatin|BR' \
   --value-postcode-br='addr:postcode' \
-  --value-phone-br='contact:phone|contact:fax' \
+  --value-phone-br='phone|fax' \
   --value-fixed='source|BR:DATASUS' \
   --ignore-warnings - |
   jq
@@ -167,13 +167,13 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --column-copy-to='CO_CEP|addr:postcode' \
   --column-copy-to='NU_ENDERECO|addr:housenumber' \
   --column-copy-to='NO_LOGRADOURO|addr:street' \
-  --column-copy-to='NO_EMAIL|contact:email' \
-  --column-copy-to='NU_TELEFONE|contact:phone' \
-  --column-copy-to='NU_FAX|contact:fax' \
+  --column-copy-to='NO_EMAIL|email' \
+  --column-copy-to='NU_TELEFONE|phone' \
+  --column-copy-to='NU_FAX|fax' \
   --value-prepend='ref:vatin|BR' \
   --value-prepend='operator:ref:vatin|BR' \
   --value-postcode-br='addr:postcode' \
-  --value-phone-br='contact:phone|contact:fax' \
+  --value-phone-br='phone|fax' \
   --value-fixed='source|BR:DATASUS' \
   --ignore-warnings \
   data/tmp/DATASUS-tbEstabelecimento.csv \
@@ -196,13 +196,13 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --column-copy-to='CO_CEP|addr:postcode' \
   --column-copy-to='NU_ENDERECO|addr:housenumber' \
   --column-copy-to='NO_LOGRADOURO|addr:street' \
-  --column-copy-to='NO_EMAIL|contact:email' \
-  --column-copy-to='NU_TELEFONE|contact:phone' \
-  --column-copy-to='NU_FAX|contact:fax' \
+  --column-copy-to='NO_EMAIL|email' \
+  --column-copy-to='NU_TELEFONE|phone' \
+  --column-copy-to='NU_FAX|fax' \
   --value-prepend='ref:vatin|BR' \
   --value-prepend='operator:ref:vatin|BR' \
   --value-postcode-br='addr:postcode' \
-  --value-phone-br='contact:phone|contact:fax' \
+  --value-phone-br='phone|fax' \
   --value-fixed='source|BR:DATASUS' \
   --ignore-warnings \
   data/tmp/DATASUS-tbEstabelecimento.csv \
@@ -225,13 +225,13 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --column-copy-to='NO_BAIRRO|addr:suburb' \
   --column-copy-to='NU_ENDERECO|addr:housenumber' \
   --column-copy-to='NO_LOGRADOURO|addr:street' \
-  --column-copy-to='NO_EMAIL|contact:email' \
-  --column-copy-to='NU_TELEFONE|contact:phone' \
-  --column-copy-to='NU_FAX|contact:fax' \
+  --column-copy-to='NO_EMAIL|email' \
+  --column-copy-to='NU_TELEFONE|phone' \
+  --column-copy-to='NU_FAX|fax' \
   --value-prepend='ref:vatin|BR' \
   --value-prepend='operator:ref:vatin|BR' \
   --value-postcode-br='addr:postcode' \
-  --value-phone-br='contact:phone|contact:fax' \
+  --value-phone-br='phone|fax' \
   --value-name-place-br='name|official_name|addr:suburb' \
   --value-name-street-br='addr:street' \
   --value-fixed='source|BR:DATASUS' \
@@ -258,13 +258,13 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
 #     --column-copy-to='CO_CEP|addr:postcode' \
 #     --column-copy-to='NU_ENDERECO|addr:housenumber' \
 #     --column-copy-to='NO_LOGRADOURO|addr:street' \
-#     --column-copy-to='NO_EMAIL|contact:email' \
-#     --column-copy-to='NU_TELEFONE|contact:phone' \
-#     --column-copy-to='NU_FAX|contact:fax' \
+#     --column-copy-to='NO_EMAIL|email' \
+#     --column-copy-to='NU_TELEFONE|phone' \
+#     --column-copy-to='NU_FAX|fax' \
 #     --value-prepend='ref:vatin|BR' \
 #     --value-prepend='operator:ref:vatin|BR' \
 #     --value-postcode-br='addr:postcode' \
-#     --value-phone-br='contact:phone|contact:fax' \
+#     --value-phone-br='phone|fax' \
 #     --value-fixed='source|BR:DATASUS' \
 #     --ignore-warnings \
 #     data/tmp/DATASUS-tbEstabelecimento.csv \
@@ -309,6 +309,7 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   data/tmp/osm-healtcare_RS_2023-04-20.geojson
 
 ## data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson
+## data/tmp/osm-healtcare-hospital_RS_2023-04-24.geojson
 # [out:json][timeout:25];
 # {{geocodeArea:Rio Grande do Sul}}->.searchArea;
 # (
@@ -331,7 +332,7 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --tolerate-distance=1000 \
   --filter-ab-dist-min=0 \
   data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
-  data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson
+  data/tmp/osm-healtcare-hospital_RS_2023-04-24.geojson
 
 ./scripts/geojson-diff.py \
   --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
@@ -342,7 +343,7 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --prefilter-a-contain='NO_RAZAO_SOCIAL||hospital' \
   --prefilter-b-contain='name||hospital' \
   data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
-  data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson
+  data/tmp/osm-healtcare-hospital_RS_2023-04-24.geojson
 
 ./scripts/geojson-diff.py \
   --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
@@ -354,7 +355,7 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   --prefilter-b-contain='name||hospital' \
   --prefilter-b-contain='amenity||hospital' \
   data/tmp/DATASUS-tbEstabelecimento_RS_v5_2023-04-12.geojson \
-  data/tmp/osm-healtcare-hospital_RS_2023-04-23.geojson
+  data/tmp/osm-healtcare-hospital_RS_2023-04-24.geojson
 
 ./scripts/csv2excel.py \
   data/tmp/datasus_RS__sus-x-osm.diff.csv \

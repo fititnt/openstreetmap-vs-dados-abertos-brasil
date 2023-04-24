@@ -202,7 +202,7 @@ data_cnpj_estabelecimentos_grep() {
 # init_cache_dirs
 data_cnpj_empresas_download
 data_cnpj_estabelecimentos_download
-data_cnpj_estabelecimentos_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04-12.csv"
+data_cnpj_estabelecimentos_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC_2023-04.csv"
 data_cnpj_estabelecimentos_grep ';"SC";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC-defesa-civil-et-al_2023-04-12.csv" 'DEFESA CIVIL|HOSPITAL |PRONTO SOCORRO|BOMBEIROS|DELEGACIA'
 data_cnpj_estabelecimentos_grep ';"SC";"8335";' "${TEMPDIR}/ReceitaFederal_CNPJ_Estabelecimentos__SC-SaoLudgero_2023-04-12.csv"
 

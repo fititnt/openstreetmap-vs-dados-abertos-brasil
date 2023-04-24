@@ -136,7 +136,7 @@ data_ibge_logradouros_unzip_e_gpkg() {
   if [ ! -f "${_merged_mem}" ]; then
     # echo "todo... ${_merged_mem}"
 
-    for file in ${_destino}/*.shp; do
+    for file in "${_destino}/"*.shp; do
       set -x
       if [ ! -f "${_merged_mem}" ]; then
         ogrmerge.py -f gpkg -o "${_merged_mem}" -nln "${layer_final}" "${file}"
