@@ -9,7 +9,10 @@
 #
 #       OPTIONS:  ---
 #
-#  REQUIREMENTS:  ---
+#  REQUIREMENTS:  - ogr2ogr (https://gdal.org/)
+#                   - sudo apt-get install gdal-bin
+#                 - csvkit (https://csvkit.readthedocs.io/)
+#                   - pip install csvkit
 #          BUGS:  ---
 #         NOTES:  ---
 #        AUTHOR:  Emerson Rocha <rocha[at]ieee.org>
@@ -62,6 +65,21 @@ ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento.gpkg data/tmp/DATASUS-tbEstab
 
 ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEstabelecimento_SC.geojsonl
 
+# Filtra arquivo grande do Datasus em apenas CSV de Santa Catarina
+# csvgrep \
+#   --encoding 'latin-1' \
+#   --delimiter ';' \
+#   --columns CO_ESTADO_GESTOR --regex '42' \
+#   data/tmp/DATASUS-tbEstabelecimento.csv \
+#   > data/tmp/DATASUS-tbEstabelecimento_SC.csv
+
+head -n 1 data/tmp/DATASUS-tbEstabelecimento.csv > data/tmp/DATASUS-tbEstabelecimento_SC.csv
+grep ';"42";' data/tmp/DATASUS-tbEstabelecimento.csv >> data/tmp/DATASUS-tbEstabelecimento_SC.csv
+
+./scripts/csv2excel.py \
+  data/tmp/DATASUS-tbEstabelecimento_SC.csv \
+  data/tmp/DATASUS-tbEstabelecimento_SC.xlsx
+
 ### Santa Catarina, v2 ________________________________________________________
 ./scripts/csv2geojson.py \
   --contain-and=CO_ESTADO_GESTOR=42 \
@@ -71,10 +89,13 @@ ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEs
   --encoding='latin-1' \
   --output-type=GeoJSON \
   --cast-integer='CO_CNES|CO_UNIDADE' \
+  --column-copy-to='NO_FANTASIA|name' \
+  --column-copy-to='NO_RAZAO_SOCIAL|official_name' \
   --column-copy-to='NU_CNPJ|ref:vatin' \
   --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
   --column-copy-to='CO_CNES|ref:CNES' \
   --column-copy-to='CO_CEP|addr:postcode' \
+  --column-copy-to='NO_BAIRRO|addr:suburb' \
   --column-copy-to='NU_ENDERECO|addr:housenumber' \
   --column-copy-to='NO_LOGRADOURO|addr:street' \
   --column-copy-to='NO_EMAIL|email' \
@@ -84,6 +105,8 @@ ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEs
   --value-prepend='operator:ref:vatin|BR' \
   --value-postcode-br='addr:postcode' \
   --value-phone-br='phone|fax' \
+  --value-name-place-br='name|official_name|addr:suburb' \
+  --value-name-street-br='addr:street' \
   --value-fixed='source|BR:DATASUS' \
   --ignore-warnings \
   data/tmp/DATASUS-tbEstabelecimento.csv \

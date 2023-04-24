@@ -59,6 +59,22 @@ set -e
     --value-fixed='source|BR:INEP' \
     data/tmp/INEP_SC_2023-04-11.csv \
     >data/tmp/INEP_SC-v2_2023-04-11.geojson
-
     
 # data/tmp/INEP_SC_2023-04-11.csv
+
+# [out:json][timeout:25];
+# {{geocodeArea:Santa Catarina}}->.searchArea;
+# (
+#   nwr["ref:INEP"](area.searchArea);
+#   // nwr["amenity"="school"](area.searchArea);
+#   // nwr["amenity"="university"](area.searchArea);
+#   // nwr["amenity"="kindergarten"](area.searchArea);
+#   // nwr["amenity"="college"](area.searchArea);
+#   // nwr["amenity"="childcare"](area.searchArea);
+#   // nwr["amenity"="prep_school"](area.searchArea);
+#   // nwr["education"="centre"](area.searchArea);
+#   // nwr["school"](area.searchArea);
+# );
+# out body;
+# >;
+# out skel qt;

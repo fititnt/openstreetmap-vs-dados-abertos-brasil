@@ -21,7 +21,7 @@
 #                 SPDX-License-Identifier: Unlicense OR 0BSD
 #       VERSION:  v1.1.0
 #       CREATED:  2023-04-11 18:13 BRT
-#      REVISION:  2023*04-20 01:20 BRT v1.1 --contain-and-in
+#      REVISION:  2023-04-20 01:20 BRT v1.1 --contain-and-in
 # ==============================================================================
 
 
@@ -35,6 +35,7 @@ import sys
 import string
 
 
+__VERSION__ = "1.1.0"
 PROGRAM = "csv2geojson"
 DESCRIPTION = """
 ------------------------------------------------------------------------------
@@ -42,7 +43,7 @@ CSV to GeoJSON
 
 ------------------------------------------------------------------------------
 """.format(
-    __file__
+    PROGRAM, __VERSION__
 )
 
 # https://www.rfc-editor.org/rfc/rfc7946
