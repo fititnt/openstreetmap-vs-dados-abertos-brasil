@@ -30,6 +30,7 @@
 
 import argparse
 import csv
+import dataclasses
 import json
 import sys
 import logging
@@ -278,7 +279,7 @@ class Cli:
             logger.addHandler(ch)
 
         # distance_okay = 50
-        distance_okay = int(pyargs.tdist)
+        # distance_okay = int(pyargs.tdist)
         # distance_permissive = 250
 
         crules = ConflationRules(
@@ -291,6 +292,7 @@ class Cli:
             filter_ab_dist_min=pyargs.filter_ab_dist_min,
             filter_ab_dist_max=pyargs.filter_ab_dist_max,
         )
+
         cprefilters = ConflationPrefilters(
             prefilter_a_contain=parse_argument_values(pyargs.prefilter_a_contain),
             prefilter_b_contain=parse_argument_values(pyargs.prefilter_b_contain),
@@ -526,6 +528,7 @@ class GeojsonCompare:
         self.a = self._load_geojson(geodataset_a, "A", "A")
         self.b = self._load_geojson(geodataset_b, "B", "B")
         self.matrix = []
+        self.matrix_v2 = []
 
         self.compute()
 
@@ -646,6 +649,12 @@ class GeojsonCompare:
                         and self.a.items[index_a] == self.b.items[index_b]
                     ):
                         self.matrix.append((index_b, MATCH_EXACT, 0, None))
+                        self.matrix_v2.append(
+                            MatchResult(
+                                match_index=index_b,
+                                match_dist=0,
+                            )
+                        )
                         found = True
                         # print("  <<<<< dist zero a")
 
@@ -655,6 +664,12 @@ class GeojsonCompare:
                     ):
                         # perfect match, except tags (TODO improve this check)
                         self.matrix.append((index_b, MATCH_EXACT, 0, None))
+                        self.matrix_v2.append(
+                            MatchResult(
+                                match_index=index_b,
+                                match_dist=0,
+                            )
+                        )
                         found = True
                         # print("  <<<< dist zero b")
 
@@ -676,6 +691,17 @@ class GeojsonCompare:
             if found == True and len(candidates) > 0:
                 it = ItemMatcher(self.a.items[index_a], candidates, self.crules)
                 self.matrix.append(it.result())
+
+                _temp = it.result()
+                if _temp is None:
+                    self.matrix_v2.append(None)
+                else:
+                    self.matrix_v2.append(
+                        MatchResult(
+                            match_index=_temp[0],
+                            match_dist=_temp[1],
+                        )
+                    )
 
                 # # pass
                 # candidates_sorted = sorted(candidates, key=lambda tup: tup[0])
@@ -1030,6 +1056,12 @@ class ItemMatcher:
         if self.automacher:
             return self.automacher
         return None
+
+
+@dataclasses.dataclass
+class MatchResult:
+    match_index: int
+    match_dist: float
 
 
 def parse_argument_values(arguments: list, delimiter: str = "||") -> dict:
