@@ -395,7 +395,7 @@ csv2geojson \
 # >;
 # out skel qt;
 
-./scripts/geojson-diff.py \
+geojsondiff \
   --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
   --output-diff-csv=data/tmp/datasus_RS__sus-x-osm.diff.csv \
   --pivot-key-main='CO_CNES||ref:CNES' --pivot-key-main='ref:vatin' \
@@ -404,7 +404,7 @@ csv2geojson \
   data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
   data/tmp/osm-healtcare-hospital_RS_2023-04-24.geojson
 
-./scripts/geojson-diff.py \
+geojsondiff \
   --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
   --output-diff-csv=data/tmp/datasus_RS__sus-x-osm.diff.csv \
   --pivot-key-main='CO_CNES||ref:CNES' --pivot-key-main='ref:vatin' \
@@ -415,36 +415,58 @@ csv2geojson \
   data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
   data/tmp/osm-healtcare-hospital_RS_2023-04-24.geojson
 
+## IEDE v1 edit
 geojsonedit \
-  --rename-attribute='ds_logrado||addr:street' \
-  --rename-attribute='nm_municip||addr:city' \
-  --rename-attribute='ds_bairro||addr:suburb' \
-  --rename-attribute='nu_logrado||addr:housenumber' \
-  --rename-attribute='nm_razao_s||name' \
-  --rename-attribute='cd_cnes||ref:CNES' \
-  --rename-attribute='cod_ibge||__cod_ibge' \
-  --rename-attribute='crs||__crs' \
-  --rename-attribute='objectid||__objectid' \
-  --rename-attribute='ds_complem||__ds_complem' \
-  --rename-attribute='regiao_saude||__regiao_saude' \
-  --rename-attribute='x||__x' \
-  --rename-attribute='y||__y' \
+  --rename-attribute='ds_logrado|||addr:street' \
+  --rename-attribute='nm_municip|||addr:city' \
+  --rename-attribute='ds_bairro|||addr:suburb' \
+  --rename-attribute='nu_logrado|||addr:housenumber' \
+  --rename-attribute='nm_razao_s|||name' \
+  --rename-attribute='cd_cnes|||ref:CNES' \
+  --rename-attribute='cod_ibge|||__cod_ibge' \
+  --rename-attribute='crs|||__crs' \
+  --rename-attribute='objectid|||__objectid' \
+  --rename-attribute='ds_complem|||__ds_complem' \
+  --rename-attribute='regiao_saude|||__regiao_saude' \
+  --rename-attribute='x|||__x' \
+  --rename-attribute='y|||__y' \
+  --rename-attribute='y|||__y' \
+  --value-fixed='source|||IEDE/RS' \
+  --value-norm-name-place='name' \
+  --value-norm-name-place='addr:suburb' \
+  --value-norm-name-place='addr:street' \
   data/tmp/iede.rs.gov.br_Hospitais-no-RS.geojson \
   >data/tmp/iede.rs.gov.br_Hospitais-no-RS_retagged.geojson
 
-# ./scripts/geojson-diff.py \
+# source:geometry=IEDE/RS
+
+## IEDE v1 compare
 geojsondiff \
-  --output-diff-geojson=data/tmp/datasus_RS_v3_sus-x-osm.diff.geojson \
-  --output-diff-csv=data/tmp/datasus_RS_v3_sus-x-osm.diff.csv \
-  --pivot-key-main='CO_CNES||ref:CNES' --pivot-key-main='ref:vatin' \
-  --tolerate-distance=1000 \
-  --filter-ab-dist-min=0 \
-  --prefilter-a-contain='NO_RAZAO_SOCIAL||hospital' \
-  --prefilter-b-contain='name||hospital' \
-  --prefilter-b-contain='amenity||hospital' \
+  --output-diff-geojson=data/tmp/datasus_RS_v3.MACHED.ieders-x-osm.diff.geojson \
+  --output-diff-csv=data/tmp/datasus_RS_v3.MACHED.ieders-x-osm.diff.csv \
+  --pivot-key-main='ref:CNES||ref:CNES' --pivot-key-main='ref:vatin' \
+  --tolerate-distance=10000 \
+  --filter-matched-pivot-key \
+  data/tmp/iede.rs.gov.br_Hospitais-no-RS_retagged.geojson \
+  data/tmp/osm-healtcare-hospital_RS_2023-04-28.geojson
+
+geojsondiff \
+  --output-diff-geojson=data/tmp/datasus_RS_v3.NOTMACHED.ieders-x-osm.diff.geojson \
+  --output-diff-csv=data/tmp/datasus_RS_v3.NOTMACHED.ieders-x-osm.diff.csv \
+  --pivot-key-main='ref:CNES||ref:CNES' --pivot-key-main='ref:vatin' \
+  --tolerate-distance=10000 \
   --filter-matched-pivot-key-not \
   data/tmp/iede.rs.gov.br_Hospitais-no-RS_retagged.geojson \
   data/tmp/osm-healtcare-hospital_RS_2023-04-28.geojson
+
+geojsondiff \
+  --output-diff-geojson=data/tmp/datasus_RS_v3_osm-x-ieders.diff.geojson \
+  --output-diff-csv=data/tmp/datasus_RS_v3_osm-x-ieders.diff.csv \
+  --pivot-key-main='ref:CNES||ref:CNES' --pivot-key-main='ref:vatin' \
+  --tolerate-distance=10000 \
+  --filter-matched-pivot-key-not \
+  data/tmp/osm-healtcare-hospital_RS_2023-04-28.geojson \
+  data/tmp/iede.rs.gov.br_Hospitais-no-RS_retagged.geojson
 
 #  cat /workspace/git/fititnt/openstreetmap-vs-dados-abertos-brasil/data/tmp/datasus_RS__sus-x-osm.diff.geojson | jq '.features | length'
 ./scripts/csv2excel.py \
