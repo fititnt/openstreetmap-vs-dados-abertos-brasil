@@ -73,8 +73,8 @@ ogr2ogr -f GPKG data/tmp/DATASUS-tbEstabelecimento_SC.gpkg data/tmp/DATASUS-tbEs
 #   data/tmp/DATASUS-tbEstabelecimento.csv \
 #   > data/tmp/DATASUS-tbEstabelecimento_SC.csv
 
-head -n 1 data/tmp/DATASUS-tbEstabelecimento.csv > data/tmp/DATASUS-tbEstabelecimento_SC.csv
-grep ';"42";' data/tmp/DATASUS-tbEstabelecimento.csv >> data/tmp/DATASUS-tbEstabelecimento_SC.csv
+head -n 1 data/tmp/DATASUS-tbEstabelecimento.csv >data/tmp/DATASUS-tbEstabelecimento_SC.csv
+grep ';"42";' data/tmp/DATASUS-tbEstabelecimento.csv >>data/tmp/DATASUS-tbEstabelecimento_SC.csv
 
 ./scripts/csv2excel.py \
   data/tmp/DATASUS-tbEstabelecimento_SC.csv \
@@ -262,6 +262,38 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   data/tmp/DATASUS-tbEstabelecimento.csv \
   >data/tmp/DATASUS-tbEstabelecimento_RS_v5_2023-04-12.geojson
 
+# ./scripts/csv2geojson.py \
+csv2geojson \
+  --contain-and=CO_ESTADO_GESTOR=43 \
+  --lat=NU_LATITUDE \
+  --lon=NU_LONGITUDE \
+  --delimiter=';' \
+  --encoding='latin-1' \
+  --output-type=GeoJSON \
+  --cast-integer='CO_CNES|CO_UNIDADE' \
+  --column-copy-to='NO_FANTASIA|name' \
+  --column-copy-to='NO_RAZAO_SOCIAL|official_name' \
+  --column-copy-to='NU_CNPJ|ref:vatin' \
+  --column-copy-to='NU_CNPJ_MANTENEDORA|operator:ref:vatin' \
+  --column-copy-to='CO_CNES|ref:CNES' \
+  --column-copy-to='CO_CEP|addr:postcode' \
+  --column-copy-to='NO_BAIRRO|addr:suburb' \
+  --column-copy-to='NU_ENDERECO|addr:housenumber' \
+  --column-copy-to='NO_LOGRADOURO|addr:street' \
+  --column-copy-to='NO_EMAIL|email' \
+  --column-copy-to='NU_TELEFONE|phone' \
+  --column-copy-to='NU_FAX|fax' \
+  --value-prepend='ref:vatin|BR' \
+  --value-prepend='operator:ref:vatin|BR' \
+  --value-postcode-br='addr:postcode' \
+  --value-phone-br='phone|fax' \
+  --value-name-place-br='name|official_name|addr:suburb' \
+  --value-name-street-br='addr:street' \
+  --value-fixed='source|BR:DATASUS' \
+  --ignore-warnings \
+  data/tmp/DATASUS-tbEstabelecimento.csv \
+  >data/tmp/DATASUS-tbEstabelecimento_RS_v5_2023-04-28.geojson
+
 # addr:city=Florianópolis
 # addr:suburb=Centro
 
@@ -347,6 +379,21 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
 # out body;
 # >;
 # out skel qt;
+# data/tmp/osm-healtcare-hospital_RS_2023-04-27.geojson
+# [out:json][timeout:25];
+# {{geocodeArea:Rio Grande do Sul}}->.searchArea;
+# (
+#   nwr["ref:CNES"](area.searchArea);
+#   nwr["healthcare"="hospital"](area.searchArea);
+#   nwr["amenity"="hospital"](area.searchArea);
+#   //nwr["amenity"="clinic"](area.searchArea);
+#   //nwr["amenity"="social_facility"](area.searchArea);
+#   //nwr["amenity"="pharmacy"](area.searchArea);
+#   //nwr["amenity"="doctors"](area.searchArea);
+# );
+# out body;
+# >;
+# out skel qt;
 
 ./scripts/geojson-diff.py \
   --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
@@ -368,21 +415,55 @@ head data/tmp/DATASUS-tbEstabelecimento.csv | ./scripts/csv2geojson.py \
   data/tmp/DATASUS-tbEstabelecimento_RS_v4_sempreaberto-2023-04-12.geojson \
   data/tmp/osm-healtcare-hospital_RS_2023-04-24.geojson
 
-./scripts/geojson-diff.py \
-  --output-diff-geojson=data/tmp/datasus_RS__sus-x-osm.diff.geojson \
-  --output-diff-csv=data/tmp/datasus_RS__sus-x-osm.diff.csv \
+geojsonedit \
+  --rename-attribute='ds_logrado||addr:street' \
+  --rename-attribute='nm_municip||addr:city' \
+  --rename-attribute='ds_bairro||addr:suburb' \
+  --rename-attribute='nu_logrado||addr:housenumber' \
+  --rename-attribute='nm_razao_s||name' \
+  --rename-attribute='cd_cnes||ref:CNES' \
+  --rename-attribute='cod_ibge||__cod_ibge' \
+  --rename-attribute='crs||__crs' \
+  --rename-attribute='objectid||__objectid' \
+  --rename-attribute='ds_complem||__ds_complem' \
+  --rename-attribute='regiao_saude||__regiao_saude' \
+  --rename-attribute='x||__x' \
+  --rename-attribute='y||__y' \
+  data/tmp/iede.rs.gov.br_Hospitais-no-RS.geojson \
+  >data/tmp/iede.rs.gov.br_Hospitais-no-RS_retagged.geojson
+
+# ./scripts/geojson-diff.py \
+geojsondiff \
+  --output-diff-geojson=data/tmp/datasus_RS_v3_sus-x-osm.diff.geojson \
+  --output-diff-csv=data/tmp/datasus_RS_v3_sus-x-osm.diff.csv \
   --pivot-key-main='CO_CNES||ref:CNES' --pivot-key-main='ref:vatin' \
   --tolerate-distance=1000 \
   --filter-ab-dist-min=0 \
   --prefilter-a-contain='NO_RAZAO_SOCIAL||hospital' \
   --prefilter-b-contain='name||hospital' \
   --prefilter-b-contain='amenity||hospital' \
-  data/tmp/DATASUS-tbEstabelecimento_RS_v5_2023-04-12.geojson \
-  data/tmp/osm-healtcare-hospital_RS_2023-04-24.geojson
+  --filter-matched-pivot-key-not \
+  data/tmp/iede.rs.gov.br_Hospitais-no-RS_retagged.geojson \
+  data/tmp/osm-healtcare-hospital_RS_2023-04-28.geojson
 
+#  cat /workspace/git/fititnt/openstreetmap-vs-dados-abertos-brasil/data/tmp/datasus_RS__sus-x-osm.diff.geojson | jq '.features | length'
 ./scripts/csv2excel.py \
   data/tmp/datasus_RS__sus-x-osm.diff.csv \
   data/tmp/datasus_RS__sus-x-osm.diff.xlsx
 
 # @TODO extrair bairros, ex: addr:suburb=Centro
 # @TODO extrair cidade, ex: addr:city=Cândido Godói
+
+overpassql2osmf data/query/fire_station_BR-RS.overpassql >data/tmp/fire_station_BR-RS.f-osm.osm
+osmium sort --input-format osm --output-format osm data/tmp/fire_station_BR-RS.f-osm.osm >data/tmp/fire_station_BR-RS.sorted.f-osm.osm
+osmium export --output-format geojson data/tmp/fire_station_BR-RS.sorted.f-osm.osm >data/tmp/fire_station_BR-RS.f-osm.geojson
+
+geojsondiff \
+  --output-diff-geojson=data/tmp/datasus_RS__fire_sus-x-osm.diff.geojson \
+  --output-diff-csv=data/tmp/datasus_RS__fire_sus-x-osm.diff.csv \
+  --pivot-key-main='CO_CNES||ref:CNES' --pivot-key-main='ref:vatin' \
+  --tolerate-distance=5000 \
+  --filter-ab-dist-min=0 \
+  --prefilter-a-contain='NO_RAZAO_SOCIAL||bombeiro' \
+  data/tmp/DATASUS-tbEstabelecimento_RS_v5_2023-04-28.geojson \
+  data/tmp/fire_station_BR-RS.f-osm.geojson
