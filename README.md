@@ -6,6 +6,8 @@
 
 ## Divisões político-administrativas
 
+> **Nota: entre abril e junho de 2023 as pequenas difefenças de limites administrativos do Brasil na OpenStreetMap com do IBGE (que é fornecido pelo estados) foi revisada e diferenças (em 2 de julho de 2023) pequenas (abaixo de 1% para área). Vide histórico em <https://t.me/OSMBrasil_Comunidade> para detalhes (TL;DR obrigado [Fidelis Assis](https://www.openstreetmap.org/user/Fidelis%20Assis)!)**
+
 - https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/Leia_me.pdf
 - (por verificar, aqui tem a nível intramunicipal)
   - https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais/26565-malhas-de-setores-censitarios-divisoes-intramunicipais.html
@@ -29,6 +31,10 @@
 - https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais/28971-base-de-faces-de-logradouros-do-brasil.html?=&t=downloads
 -->
 
+## População de divisões político-administrativas
+
+> TODO: por fazer
+
 ## Mapeamento de campos entre fontes governamentais e OpenStreetMap
 ### Identificadores _unicos_
 
@@ -43,6 +49,11 @@
     - [not:ref:vatin](https://taginfo.openstreetmap.org/keys/not%3Aref%3Avatin#values)
 - ref:INEP
   - https://wiki.openstreetmap.org/wiki/Key:ref:INEP
+
+# Veja também
+
+### Projeto de [Fidelis Assis](https://www.openstreetmap.org/user/Fidelis%20Assis)
+- http://gpsutil.com/DifLimitesMunicipaisOSMxIBGE.html
 
 # Licença
 

@@ -448,7 +448,7 @@ geojsondiff \
   --tolerate-distance=10000 \
   --filter-matched-pivot-key \
   data/tmp/iede.rs.gov.br_Hospitais-no-RS_retagged.geojson \
-  data/tmp/osm-healtcare-hospital_RS_2023-04-28.geojson
+  data/tmp/osm-healtcare-hospital_RS_2023-05-02.geojson
 
 geojsondiff \
   --output-diff-geojson=data/tmp/datasus_RS_v3.NOTMACHED.ieders-x-osm.diff.geojson \
@@ -457,7 +457,7 @@ geojsondiff \
   --tolerate-distance=10000 \
   --filter-matched-pivot-key-not \
   data/tmp/iede.rs.gov.br_Hospitais-no-RS_retagged.geojson \
-  data/tmp/osm-healtcare-hospital_RS_2023-04-28.geojson
+  data/tmp/osm-healtcare-hospital_RS_2023-05-02.geojson
 
 geojsondiff \
   --output-diff-geojson=data/tmp/datasus_RS_v3_osm-x-ieders.diff.geojson \
@@ -465,7 +465,7 @@ geojsondiff \
   --pivot-key-main='ref:CNES||ref:CNES' --pivot-key-main='ref:vatin' \
   --tolerate-distance=10000 \
   --filter-matched-pivot-key-not \
-  data/tmp/osm-healtcare-hospital_RS_2023-04-28.geojson \
+  data/tmp/osm-healtcare-hospital_RS_2023-05-02.geojson \
   data/tmp/iede.rs.gov.br_Hospitais-no-RS_retagged.geojson
 
 #  cat /workspace/git/fititnt/openstreetmap-vs-dados-abertos-brasil/data/tmp/datasus_RS__sus-x-osm.diff.geojson | jq '.features | length'
@@ -489,3 +489,8 @@ geojsondiff \
   --prefilter-a-contain='NO_RAZAO_SOCIAL||bombeiro' \
   data/tmp/DATASUS-tbEstabelecimento_RS_v5_2023-04-28.geojson \
   data/tmp/fire_station_BR-RS.f-osm.geojson
+
+
+## CNES que não tem ponto na cidade e a rua não bate com ponto sugerido
+# 2250810 Porto Lucena
+# 2228548 Caiçara
